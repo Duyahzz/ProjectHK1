@@ -10,4 +10,4 @@
 
 Documentations:https://github.com/Duyahzz/ProjectHK1/tree/main/Documentations
 
-Thanks you visit our website!!
+Thanks you for visit our website!!
