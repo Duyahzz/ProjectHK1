@@ -9,15 +9,33 @@ async function request(path, options = {}) {
     ...options,
   });
 
+  const data = await response.json().catch(() => null);
+
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || `Request failed: ${response.status}`);
+    throw new Error(data?.message || `Request failed: ${response.status}`);
   }
 
-  return response.json();
+  return data;
 }
 
 export const api = {
+  register: (payload) =>
+    request("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  login: (payload) =>
+    request("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  logout: () =>
+    request("/auth/logout", {
+      method: "POST",
+    }),
+
   getCustomers: (search = "") =>
     request(`/customers${search ? `?search=${encodeURIComponent(search)}` : ""}`),
 
@@ -51,12 +69,5 @@ export const api = {
       body: JSON.stringify(payload),
     }),
 };
-
-export async function createShipment(payload) {
-  return request("/shipments", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-}
 
 export default API_URL;

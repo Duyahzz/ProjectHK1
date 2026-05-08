@@ -1,50 +1,231 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { CircleDollarSign, Package, ShieldCheck, Truck } from "lucide-react";
-import SectionTitle from "../../components/common/SectionTitle";
-import StatCard from "../../components/common/StatCard";
-import TableCard from "../../components/common/TableCard";
-import StatusBadge from "../../components/common/StatusBadge";
+import {
+  Building2,
+  CircleDollarSign,
+  ClipboardList,
+  FileText,
+  LayoutDashboard,
+  MapPinned,
+  Package,
+  Receipt,
+  ShieldCheck,
+  Truck,
+  Users,
+} from "lucide-react";
 import { api } from "../../services/api";
 import { formatCurrency } from "../../utils/helpers";
 
-function Tabs({ activeTab, setActiveTab }) {
-  const tabs = ["shipments", "create-shipment", "customers", "branches", "types", "bills", "reports"];
+function AdminMenu({ activeTab, setActiveTab, onLogout }) {
+  const menuItems = [
+    { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { key: "shipments", label: "Shipments", icon: Package },
+    { key: "customers", label: "Customers", icon: Users },
+    { key: "branches", label: "Branches", icon: Building2 },
+    { key: "types", label: "Shipment Types", icon: ClipboardList },
+    { key: "bills", label: "Bills", icon: Receipt },
+    { key: "reports", label: "Reports", icon: FileText },
+  ];
 
   return (
-    <div className="tabs">
-      {tabs.map((tab) => (
-        <button
-          key={tab}
-          className={`tab-btn ${activeTab === tab ? "active" : ""}`}
-          onClick={() => setActiveTab(tab)}
+    <aside className="cx-admin-sidebar">
+      <div className="cx-admin-brand">
+        <div className="cx-admin-brand-logo">CX</div>
+        <div>
+          <div className="cx-admin-brand-title">CourierXpress</div>
+          <div className="cx-admin-brand-subtitle">Admin Panel</div>
+        </div>
+      </div>
+
+      <div className="cx-admin-role-card">
+        <div className="cx-admin-role-label">Current Role</div>
+        <div className="cx-admin-role-value">ADMIN</div>
+      </div>
+
+      <div className="cx-admin-nav-title">Management Menu</div>
+
+      <div className="cx-admin-nav-list">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.key}
+              className={`cx-admin-nav-item ${activeTab === item.key ? "active" : ""}`}
+              onClick={() => setActiveTab(item.key)}
+            >
+              <Icon size={16} />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <button className="cx-admin-logout" onClick={onLogout}>
+        Logout
+      </button>
+    </aside>
+  );
+}
+
+function HeaderBar({ authUser, onOpenProfile }) {
+  return (
+    <div className="cx-admin-header">
+      <div>
+        <h1>Admin Dashboard</h1>
+        <p>Overview of shipment operations, billing, and master data.</p>
+      </div>
+
+      <div className="cx-admin-header-right">
+        <div
+          className="cx-admin-user-box clickable"
+          onClick={onOpenProfile}
+          title="View administrator profile"
         >
-          {tab === "types" ? "shipment types" : tab}
-        </button>
-      ))}
+          <div className="cx-admin-user-avatar">
+            {authUser?.full_name?.charAt(0)?.toUpperCase() || "A"}
+          </div>
+          <div>
+            <div className="cx-admin-user-name">{authUser?.full_name || "Admin"}</div>
+            <div className="cx-admin-user-role">
+              {authUser?.role === "ADMIN" ? "Administrator" : authUser?.role || "-"}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-function ShipmentsTab({ refreshKey }) {
+function DashboardStat({ title, value, tone = "default" }) {
+  return (
+    <div className={`cx-admin-stat-card ${tone}`}>
+      <div className="cx-admin-stat-title">{title}</div>
+      <div className="cx-admin-stat-value">{value}</div>
+    </div>
+  );
+}
+
+function StatusPill({ value }) {
+  const status = String(value || "").toUpperCase();
+
+  let className = "pending";
+  if (status === "IN_TRANSIT") className = "transit";
+  if (status === "DELIVERED" || status === "PAID" || status === "ACTIVE") className = "delivered";
+  if (status === "CANCELLED" || status === "UNPAID" || status === "INACTIVE") className = "cancelled";
+
+  return <span className={`cx-status-pill ${className}`}>{status || "-"}</span>;
+}
+
+function DashboardView({ shipments, bills, setActiveTab }) {
+  const bookedCount = shipments.filter((item) => item.current_status === "BOOKED").length;
+  const transitCount = shipments.filter((item) => item.current_status === "IN_TRANSIT").length;
+  const deliveredCount = shipments.filter((item) => item.current_status === "DELIVERED").length;
+  const cancelledCount = shipments.filter((item) => item.current_status === "CANCELLED").length;
+  const revenue = bills.reduce((sum, item) => sum + Number(item.total_amount || 0), 0);
+
+  return (
+    <>
+      <div className="cx-admin-stat-grid">
+        <DashboardStat title="Total Shipments" value={shipments.length} />
+        <DashboardStat title="Booked" value={bookedCount} tone="pending" />
+        <DashboardStat title="In Transit" value={transitCount} tone="transit" />
+        <DashboardStat title="Delivered" value={deliveredCount} tone="delivered" />
+        <DashboardStat title="Cancelled" value={cancelledCount} tone="cancelled" />
+      </div>
+
+      <div className="cx-admin-grid-two">
+        <div className="cx-admin-panel">
+          <div className="cx-admin-panel-header">
+            <h3>Business Summary</h3>
+          </div>
+
+          <div className="cx-admin-summary-list">
+            <div className="cx-admin-summary-row">
+              <span>Total Bills</span>
+              <strong>{bills.length}</strong>
+            </div>
+            <div className="cx-admin-summary-row">
+              <span>Total Revenue</span>
+              <strong>{formatCurrency(revenue)}</strong>
+            </div>
+            <div className="cx-admin-summary-row">
+              <span>Tracking Module</span>
+              <button className="cx-inline-link" onClick={() => setActiveTab("shipments")}>
+                Open Shipments
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="cx-admin-panel">
+          <div className="cx-admin-panel-header">
+            <h3>Quick Access</h3>
+          </div>
+
+          <div className="cx-admin-shortcuts">
+            <button className="cx-admin-shortcut" onClick={() => setActiveTab("shipments")}>
+              <Package size={16} />
+              <span>Shipment Overview</span>
+            </button>
+            <button className="cx-admin-shortcut" onClick={() => setActiveTab("customers")}>
+              <Users size={16} />
+              <span>Customer Records</span>
+            </button>
+            <button className="cx-admin-shortcut" onClick={() => setActiveTab("branches")}>
+              <Building2 size={16} />
+              <span>Branches</span>
+            </button>
+            <button className="cx-admin-shortcut" onClick={() => setActiveTab("bills")}>
+              <Receipt size={16} />
+              <span>Billing</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function ShipmentsView({ refreshKey }) {
   const [shipmentFilter, setShipmentFilter] = useState("ALL");
+  const [keyword, setKeyword] = useState("");
   const [shipments, setShipments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
     api
-      .getShipments({ status: shipmentFilter })
+      .getShipments({ status: shipmentFilter === "ALL" ? "" : shipmentFilter })
       .then(setShipments)
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [shipmentFilter, refreshKey]);
 
+  const filteredShipments = useMemo(() => {
+    const q = keyword.trim().toLowerCase();
+    if (!q) return shipments;
+
+    return shipments.filter(
+      (item) =>
+        item.tracking_number?.toLowerCase().includes(q) ||
+        item.sender?.full_name?.toLowerCase().includes(q) ||
+        item.receiver?.full_name?.toLowerCase().includes(q)
+    );
+  }, [shipments, keyword]);
+
   return (
-    <div className="mt-20">
-      <div className="toolbar">
+    <div className="cx-admin-panel">
+      <div className="cx-admin-toolbar">
+        <div className="cx-admin-search">
+          <MapPinned size={16} />
+          <input
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            placeholder="Search by tracking number, sender, or receiver..."
+          />
+        </div>
+
         <select
-          className="select"
-          style={{ maxWidth: 240 }}
+          className="cx-admin-select"
           value={shipmentFilter}
           onChange={(e) => setShipmentFilter(e.target.value)}
         >
@@ -56,297 +237,57 @@ function ShipmentsTab({ refreshKey }) {
         </select>
       </div>
 
-      <TableCard headers={["Tracking No", "Sender", "Receiver", "Type", "Branch", "Agent", "Status", "Total Charge"]}>
-        {loading ? (
-          <tr>
-            <td colSpan="8">Loading shipments...</td>
-          </tr>
-        ) : shipments.length ? (
-          shipments.map((item) => (
-            <tr key={item.shipment_id}>
-              <td>{item.tracking_number}</td>
-              <td>{item.sender?.full_name}</td>
-              <td>{item.receiver?.full_name}</td>
-              <td>{item.shipment_type?.type_name || item.shipmentType?.type_name}</td>
-              <td>{item.branch?.branch_name}</td>
-              <td>{item.agent?.full_name || "-"}</td>
-              <td>
-                <StatusBadge value={item.current_status} />
-              </td>
-              <td>{formatCurrency(item.total_charge)}</td>
+      <div className="cx-admin-table-wrap">
+        <table className="cx-admin-table">
+          <thead>
+            <tr>
+              <th>Tracking No</th>
+              <th>Sender</th>
+              <th>Receiver</th>
+              <th>Type</th>
+              <th>Branch</th>
+              <th>Agent</th>
+              <th>Status</th>
+              <th>Total Charge</th>
             </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan="8">No shipments found.</td>
-          </tr>
-        )}
-      </TableCard>
-    </div>
-  );
-}
-
-function CreateShipmentTab({ onShipmentCreated }) {
-  const [customers, setCustomers] = useState([]);
-  const [branches, setBranches] = useState([]);
-  const [shipmentTypes, setShipmentTypes] = useState([]);
-  const [submitting, setSubmitting] = useState(false);
-  const [createMessage, setCreateMessage] = useState("");
-  const [createError, setCreateError] = useState("");
-
-  const [formData, setFormData] = useState({
-    sender_customer_id: "",
-    receiver_customer_id: "",
-    shipment_type_id: "",
-    origin_branch_id: "",
-    assigned_agent_id: "",
-    weight: "",
-    total_charge: "",
-    expected_delivery_date: "",
-    notes: "",
-  });
-
-  useEffect(() => {
-    api.getCustomers().then(setCustomers).catch(console.error);
-    api.getBranches().then(setBranches).catch(console.error);
-    api.getShipmentTypes().then(setShipmentTypes).catch(console.error);
-  }, []);
-
-  const handleChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const resetForm = () => {
-    setFormData({
-      sender_customer_id: "",
-      receiver_customer_id: "",
-      shipment_type_id: "",
-      origin_branch_id: "",
-      assigned_agent_id: "",
-      weight: "",
-      total_charge: "",
-      expected_delivery_date: "",
-      notes: "",
-    });
-    setCreateMessage("");
-    setCreateError("");
-  };
-
-  const handleCreateShipment = async (e) => {
-    e.preventDefault();
-    setCreateMessage("");
-    setCreateError("");
-
-    try {
-      setSubmitting(true);
-
-      const payload = {
-        sender_customer_id: Number(formData.sender_customer_id),
-        receiver_customer_id: Number(formData.receiver_customer_id),
-        shipment_type_id: Number(formData.shipment_type_id),
-        origin_branch_id: Number(formData.origin_branch_id),
-        assigned_agent_id: formData.assigned_agent_id
-          ? Number(formData.assigned_agent_id)
-          : null,
-        weight: Number(formData.weight),
-        total_charge: Number(formData.total_charge),
-        expected_delivery_date: formData.expected_delivery_date,
-        notes: formData.notes,
-      };
-
-      await api.createShipment(payload);
-
-      setCreateMessage("Create shipment successfully.");
-      resetForm();
-
-      if (onShipmentCreated) {
-        onShipmentCreated();
-      }
-    } catch (error) {
-      console.error(error);
-      setCreateError("Create shipment failed. Please check your input and backend.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="mt-20">
-      <div className="card">
-        <div className="card-header">
-          <h3 className="card-title">Create Shipment Booking</h3>
-          <div className="card-subtitle">
-            Create a new shipment and save it to the real database.
-          </div>
-        </div>
-
-        <div className="card-body">
-          <form onSubmit={handleCreateShipment} className="form-grid">
-            <div className="grid-2">
-              <div>
-                <label className="label">Sender</label>
-                <select
-                  className="select"
-                  value={formData.sender_customer_id}
-                  onChange={(e) => handleChange("sender_customer_id", e.target.value)}
-                  required
-                >
-                  <option value="">Select sender</option>
-                  {customers.map((customer) => (
-                    <option key={customer.customer_id} value={customer.customer_id}>
-                      {customer.full_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="label">Receiver</label>
-                <select
-                  className="select"
-                  value={formData.receiver_customer_id}
-                  onChange={(e) => handleChange("receiver_customer_id", e.target.value)}
-                  required
-                >
-                  <option value="">Select receiver</option>
-                  {customers.map((customer) => (
-                    <option key={customer.customer_id} value={customer.customer_id}>
-                      {customer.full_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid-2">
-              <div>
-                <label className="label">Shipment Type</label>
-                <select
-                  className="select"
-                  value={formData.shipment_type_id}
-                  onChange={(e) => handleChange("shipment_type_id", e.target.value)}
-                  required
-                >
-                  <option value="">Select shipment type</option>
-                  {shipmentTypes.map((type) => (
-                    <option key={type.shipment_type_id} value={type.shipment_type_id}>
-                      {type.type_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="label">Origin Branch</label>
-                <select
-                  className="select"
-                  value={formData.origin_branch_id}
-                  onChange={(e) => handleChange("origin_branch_id", e.target.value)}
-                  required
-                >
-                  <option value="">Select branch</option>
-                  {branches.map((branch) => (
-                    <option key={branch.branch_id} value={branch.branch_id}>
-                      {branch.branch_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid-3">
-              <div>
-                <label className="label">Assigned Agent ID</label>
-                <input
-                  className="input"
-                  type="number"
-                  value={formData.assigned_agent_id}
-                  onChange={(e) => handleChange("assigned_agent_id", e.target.value)}
-                  placeholder="Example: 2"
-                />
-              </div>
-
-              <div>
-                <label className="label">Weight</label>
-                <input
-                  className="input"
-                  type="number"
-                  step="0.01"
-                  value={formData.weight}
-                  onChange={(e) => handleChange("weight", e.target.value)}
-                  placeholder="Example: 1.5"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="label">Total Charge</label>
-                <input
-                  className="input"
-                  type="number"
-                  step="0.01"
-                  value={formData.total_charge}
-                  onChange={(e) => handleChange("total_charge", e.target.value)}
-                  placeholder="Example: 50000"
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="label">Expected Delivery Date</label>
-              <input
-                className="input"
-                type="date"
-                value={formData.expected_delivery_date}
-                onChange={(e) => handleChange("expected_delivery_date", e.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="label">Notes</label>
-              <textarea
-                className="textarea"
-                value={formData.notes}
-                onChange={(e) => handleChange("notes", e.target.value)}
-                placeholder="Enter shipment notes"
-              />
-            </div>
-
-            {createMessage ? (
-              <div style={{ color: "green", fontWeight: 600 }}>{createMessage}</div>
-            ) : null}
-
-            {createError ? (
-              <div style={{ color: "red", fontWeight: 600 }}>{createError}</div>
-            ) : null}
-
-            <div className="flex gap-12">
-              <button type="submit" className="btn" disabled={submitting}>
-                {submitting ? "Creating..." : "Create Shipment"}
-              </button>
-
-              <button
-                type="button"
-                className="btn-outline"
-                onClick={resetForm}
-                disabled={submitting}
-              >
-                Reset
-              </button>
-            </div>
-          </form>
-        </div>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan="8" className="cx-empty-row">
+                  Loading shipments...
+                </td>
+              </tr>
+            ) : filteredShipments.length ? (
+              filteredShipments.map((item) => (
+                <tr key={item.shipment_id}>
+                  <td className="cx-highlight-cell">{item.tracking_number}</td>
+                  <td>{item.sender?.full_name || "-"}</td>
+                  <td>{item.receiver?.full_name || "-"}</td>
+                  <td>{item.shipment_type?.type_name || item.shipmentType?.type_name || "-"}</td>
+                  <td>{item.branch?.branch_name || "-"}</td>
+                  <td>{item.agent?.full_name || "-"}</td>
+                  <td>
+                    <StatusPill value={item.current_status} />
+                  </td>
+                  <td>{formatCurrency(item.total_charge || 0)}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="8" className="cx-empty-row">
+                  No shipments found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 }
 
-function CustomersTab() {
+function CustomersView() {
   const [query, setQuery] = useState("");
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -365,44 +306,63 @@ function CustomersTab() {
   }, [query]);
 
   return (
-    <div className="mt-20">
-      <div className="toolbar">
-        <input
-          className="input"
-          style={{ maxWidth: 340 }}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by name, phone, city, code"
-        />
+    <div className="cx-admin-panel">
+      <div className="cx-admin-toolbar">
+        <div className="cx-admin-search">
+          <Users size={16} />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name, phone, city, or code..."
+          />
+        </div>
       </div>
 
-      <TableCard headers={["Code", "Name", "Phone", "Email", "City", "Country"]}>
-        {loading ? (
-          <tr>
-            <td colSpan="6">Loading customers...</td>
-          </tr>
-        ) : customers.length ? (
-          customers.map((item) => (
-            <tr key={item.customer_id}>
-              <td>{item.customer_code}</td>
-              <td>{item.full_name}</td>
-              <td>{item.phone}</td>
-              <td>{item.email}</td>
-              <td>{item.city}</td>
-              <td>{item.country}</td>
+      <div className="cx-admin-table-wrap">
+        <table className="cx-admin-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>City</th>
+              <th>Country</th>
             </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan="6">No customers found.</td>
-          </tr>
-        )}
-      </TableCard>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan="6" className="cx-empty-row">
+                  Loading customers...
+                </td>
+              </tr>
+            ) : customers.length ? (
+              customers.map((item) => (
+                <tr key={item.customer_id}>
+                  <td>{item.customer_code}</td>
+                  <td>{item.full_name}</td>
+                  <td>{item.phone}</td>
+                  <td>{item.email}</td>
+                  <td>{item.city}</td>
+                  <td>{item.country}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="cx-empty-row">
+                  No customers found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
-function BranchesTab() {
+function BranchesView() {
   const [branches, setBranches] = useState([]);
 
   useEffect(() => {
@@ -410,32 +370,48 @@ function BranchesTab() {
   }, []);
 
   return (
-    <div className="mt-20">
-      <TableCard headers={["Code", "Branch Name", "City", "Phone", "Email", "Status"]}>
-        {branches.length ? (
-          branches.map((item) => (
-            <tr key={item.branch_id}>
-              <td>{item.branch_code}</td>
-              <td>{item.branch_name}</td>
-              <td>{item.city}</td>
-              <td>{item.phone}</td>
-              <td>{item.email}</td>
-              <td>
-                <StatusBadge value={item.status} />
-              </td>
+    <div className="cx-admin-panel">
+      <div className="cx-admin-table-wrap">
+        <table className="cx-admin-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Branch Name</th>
+              <th>City</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Status</th>
             </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan="6">Loading branches...</td>
-          </tr>
-        )}
-      </TableCard>
+          </thead>
+          <tbody>
+            {branches.length ? (
+              branches.map((item) => (
+                <tr key={item.branch_id}>
+                  <td>{item.branch_code}</td>
+                  <td>{item.branch_name}</td>
+                  <td>{item.city}</td>
+                  <td>{item.phone}</td>
+                  <td>{item.email}</td>
+                  <td>
+                    <StatusPill value={item.status} />
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="cx-empty-row">
+                  Loading branches...
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
-function TypesTab() {
+function TypesView() {
   const [types, setTypes] = useState([]);
 
   useEffect(() => {
@@ -443,27 +419,40 @@ function TypesTab() {
   }, []);
 
   return (
-    <div className="mt-20">
-      <TableCard headers={["Type Name", "Description", "Base Rate"]}>
-        {types.length ? (
-          types.map((item) => (
-            <tr key={item.shipment_type_id}>
-              <td>{item.type_name}</td>
-              <td>{item.description}</td>
-              <td>{formatCurrency(item.base_rate)}</td>
+    <div className="cx-admin-panel">
+      <div className="cx-admin-table-wrap">
+        <table className="cx-admin-table">
+          <thead>
+            <tr>
+              <th>Type Name</th>
+              <th>Description</th>
+              <th>Base Rate</th>
             </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan="3">Loading shipment types...</td>
-          </tr>
-        )}
-      </TableCard>
+          </thead>
+          <tbody>
+            {types.length ? (
+              types.map((item) => (
+                <tr key={item.shipment_type_id}>
+                  <td>{item.type_name}</td>
+                  <td>{item.description}</td>
+                  <td>{formatCurrency(item.base_rate || 0)}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="3" className="cx-empty-row">
+                  Loading shipment types...
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
-function BillsTab() {
+function BillsView() {
   const [bills, setBills] = useState([]);
 
   useEffect(() => {
@@ -471,68 +460,157 @@ function BillsTab() {
   }, []);
 
   return (
-    <div className="mt-20">
-      <TableCard headers={["Bill No", "Tracking No", "Total", "Payment Status", "Method", "Issued At"]}>
-        {bills.length ? (
-          bills.map((item) => (
-            <tr key={item.bill_id}>
-              <td>{item.bill_number}</td>
-              <td>{item.shipment?.tracking_number}</td>
-              <td>{formatCurrency(item.total_amount)}</td>
-              <td>
-                <StatusBadge value={item.payment_status} />
-              </td>
-              <td>{item.payment_method}</td>
-              <td>{item.issued_at}</td>
+    <div className="cx-admin-panel">
+      <div className="cx-admin-table-wrap">
+        <table className="cx-admin-table">
+          <thead>
+            <tr>
+              <th>Bill No</th>
+              <th>Tracking No</th>
+              <th>Total</th>
+              <th>Payment Status</th>
+              <th>Method</th>
+              <th>Issued At</th>
             </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan="6">Loading bills...</td>
-          </tr>
-        )}
-      </TableCard>
+          </thead>
+          <tbody>
+            {bills.length ? (
+              bills.map((item) => (
+                <tr key={item.bill_id}>
+                  <td>{item.bill_number}</td>
+                  <td>{item.shipment?.tracking_number || "-"}</td>
+                  <td>{formatCurrency(item.total_amount || 0)}</td>
+                  <td>
+                    <StatusPill value={item.payment_status} />
+                  </td>
+                  <td>{item.payment_method || "-"}</td>
+                  <td>{item.issued_at || "-"}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="cx-empty-row">
+                  Loading bills...
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
-function ReportsTab() {
+function ReportsView() {
   return (
-    <div className="grid-3 mt-20">
-      <div className="card">
-        <div className="card-header">
-          <h3 className="card-title">Date-wise Shipment Report</h3>
+    <div className="cx-admin-report-grid">
+      <div className="cx-admin-panel">
+        <div className="cx-admin-panel-header">
+          <h3>Date-wise Shipment Report</h3>
         </div>
-        <div className="card-body">
-          Use the shipment tab with status filters and export from backend later.
-        </div>
-      </div>
-
-      <div className="card">
-        <div className="card-header">
-          <h3 className="card-title">City-wise Shipment Report</h3>
-        </div>
-        <div className="card-body">
-          Branch and customer city data is already loaded from API.
+        <div className="cx-admin-report-text">
+          Use shipment filters and export features later from backend.
         </div>
       </div>
 
-      <div className="card">
-        <div className="card-header">
-          <h3 className="card-title">Agent / Branch Performance</h3>
+      <div className="cx-admin-panel">
+        <div className="cx-admin-panel-header">
+          <h3>City-wise Shipment Report</h3>
         </div>
-        <div className="card-body">
-          You can extend this after adding a dedicated reporting endpoint.
+        <div className="cx-admin-report-text">
+          Branch and customer city information is already available from the API.
+        </div>
+      </div>
+
+      <div className="cx-admin-panel">
+        <div className="cx-admin-panel-header">
+          <h3>Agent / Branch Performance</h3>
+        </div>
+        <div className="cx-admin-report-text">
+          You can extend this page later with charts and export actions.
         </div>
       </div>
     </div>
   );
 }
 
-export default function AdminDashboard() {
+function AdminProfilePage({ authUser, onBack }) {
+  return (
+    <div className="cx-admin-panel">
+      <div className="cx-admin-panel-header cx-admin-profile-header-row">
+        <div>
+          <h3>Administrator Profile</h3>
+          <p className="cx-admin-profile-subtitle">Detailed account information</p>
+        </div>
+
+        <button className="btn-outline" onClick={onBack}>
+          Back
+        </button>
+      </div>
+
+      <div className="cx-admin-profile-hero">
+        <div className="cx-admin-profile-avatar-large">
+          {authUser?.full_name?.charAt(0)?.toUpperCase() || "A"}
+        </div>
+
+        <div>
+          <div className="cx-admin-profile-name">{authUser?.full_name || "Admin"}</div>
+          <div className="cx-admin-profile-role">
+            {authUser?.role === "ADMIN" ? "Administrator" : authUser?.role || "-"}
+          </div>
+        </div>
+      </div>
+
+      <div className="cx-admin-profile-grid">
+        <div className="cx-admin-profile-item">
+          <span>Full Name</span>
+          <strong>{authUser?.full_name || "-"}</strong>
+        </div>
+
+        <div className="cx-admin-profile-item">
+          <span>Username</span>
+          <strong>{authUser?.username || "-"}</strong>
+        </div>
+
+        <div className="cx-admin-profile-item">
+          <span>Email</span>
+          <strong>{authUser?.email || "-"}</strong>
+        </div>
+
+        <div className="cx-admin-profile-item">
+          <span>Phone</span>
+          <strong>{authUser?.phone || "-"}</strong>
+        </div>
+
+        <div className="cx-admin-profile-item">
+          <span>Role</span>
+          <strong>{authUser?.role || "-"}</strong>
+        </div>
+
+        <div className="cx-admin-profile-item">
+          <span>User ID</span>
+          <strong>{authUser?.user_id || "-"}</strong>
+        </div>
+
+        <div className="cx-admin-profile-item">
+          <span>Branch ID</span>
+          <strong>{authUser?.branch_id ?? "-"}</strong>
+        </div>
+
+        <div className="cx-admin-profile-item">
+          <span>Status</span>
+          <strong>Active</strong>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function AdminDashboard({ onLogout }) {
+  const authUser = JSON.parse(localStorage.getItem("cx_auth_user") || "null");
   const [shipments, setShipments] = useState([]);
   const [bills, setBills] = useState([]);
-  const [activeTab, setActiveTab] = useState("shipments");
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [refreshKey, setRefreshKey] = useState(0);
 
   const loadDashboardData = () => {
@@ -559,58 +637,31 @@ export default function AdminDashboard() {
     [bills]
   );
 
-  const handleShipmentCreated = () => {
-    setRefreshKey((prev) => prev + 1);
-    setActiveTab("shipments");
-  };
-
   return (
-    <div className="page-wrap">
-      <SectionTitle
-        title="Admin Dashboard"
-        description="Overview of shipment operations, billing, and master data from Laravel API."
-      />
+    <div className="cx-admin-layout">
+      <AdminMenu activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
 
-      <div className="grid-4">
-        <StatCard
-          title="Total Shipments"
-          value={shipments.length}
-          icon={Package}
-          subtitle="All shipment records"
+      <main className="cx-admin-main">
+        <HeaderBar
+          authUser={authUser}
+          onOpenProfile={() => setActiveTab("admin-profile")}
         />
-        <StatCard
-          title="In Transit"
-          value={transitCount}
-          icon={Truck}
-          subtitle="Currently on the way"
-        />
-        <StatCard
-          title="Delivered"
-          value={deliveredCount}
-          icon={ShieldCheck}
-          subtitle="Completed shipments"
-        />
-        <StatCard
-          title="Revenue"
-          value={formatCurrency(revenue)}
-          icon={CircleDollarSign}
-          subtitle="Total billed amount"
-        />
-      </div>
 
-      <div className="mt-24">
-        <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
-      </div>
+        {activeTab === "dashboard" && (
+          <DashboardView shipments={shipments} bills={bills} setActiveTab={setActiveTab} />
+        )}
 
-      {activeTab === "shipments" && <ShipmentsTab refreshKey={refreshKey} />}
-      {activeTab === "create-shipment" && (
-        <CreateShipmentTab onShipmentCreated={handleShipmentCreated} />
-      )}
-      {activeTab === "customers" && <CustomersTab />}
-      {activeTab === "branches" && <BranchesTab />}
-      {activeTab === "types" && <TypesTab />}
-      {activeTab === "bills" && <BillsTab />}
-      {activeTab === "reports" && <ReportsTab />}
+        {activeTab === "admin-profile" && (
+          <AdminProfilePage authUser={authUser} onBack={() => setActiveTab("dashboard")} />
+        )}
+
+        {activeTab === "shipments" && <ShipmentsView refreshKey={refreshKey} />}
+        {activeTab === "customers" && <CustomersView />}
+        {activeTab === "branches" && <BranchesView />}
+        {activeTab === "types" && <TypesView />}
+        {activeTab === "bills" && <BillsView />}
+        {activeTab === "reports" && <ReportsView />}
+      </main>
     </div>
   );
 }
