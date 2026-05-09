@@ -7,6 +7,7 @@ export default function LoginPage({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const [loginForm, setLoginForm] = useState({
     login: "admin01",
@@ -25,6 +26,25 @@ export default function LoginPage({ onLogin }) {
     country: "Vietnam",
   });
 
+  const [forgotForm, setForgotForm] = useState({
+    username: "",
+    phone: "",
+    password: "",
+    password_confirmation: "",
+  });
+
+  const clearMessages = () => {
+    setError("");
+    setSuccess("");
+    setFieldErrors({});
+  };
+
+  const getFieldError = (name) => {
+    const value = fieldErrors?.[name];
+    if (Array.isArray(value)) return value[0];
+    return value || "";
+  };
+
   const resetRegisterForm = () => {
     setRegisterForm({
       full_name: "",
@@ -39,24 +59,36 @@ export default function LoginPage({ onLogin }) {
     });
   };
 
+  const resetForgotForm = () => {
+    setForgotForm({
+      username: "",
+      phone: "",
+      password: "",
+      password_confirmation: "",
+    });
+  };
+
   const handleLogin = async () => {
-    setError("");
-    setSuccess("");
+    clearMessages();
 
     try {
       setLoading(true);
       const data = await api.login(loginForm);
       onLogin(data.user);
     } catch (err) {
-      setError(err.message || "Login failed.");
+      if (err.status === 422) {
+        setFieldErrors(err.validationErrors || {});
+        setError("Please check the highlighted fields.");
+      } else {
+        setError(err.serverError || err.message || "Login failed.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleRegister = async () => {
-    setError("");
-    setSuccess("");
+    clearMessages();
 
     try {
       setLoading(true);
@@ -67,262 +99,426 @@ export default function LoginPage({ onLogin }) {
         login: registerForm.username || registerForm.email,
         password: "",
       });
+
       resetRegisterForm();
       setMode("login");
     } catch (err) {
-      setError(err.message || "Register failed.");
+      if (err.status === 422) {
+        setFieldErrors(err.validationErrors || {});
+        setError("Please check the highlighted fields.");
+      } else {
+        setError(err.serverError || err.message || "Register failed.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPasswordByPhone = async () => {
+    clearMessages();
+
+    try {
+      setLoading(true);
+      const data = await api.resetPasswordByPhone(forgotForm);
+
+      setSuccess(data.message || "Password reset successful. Please login again.");
+      setLoginForm((prev) => ({
+        ...prev,
+        login: forgotForm.username,
+        password: "",
+      }));
+
+      resetForgotForm();
+      setMode("login");
+    } catch (err) {
+      if (err.status === 422) {
+        setFieldErrors(err.validationErrors || {});
+        setError("Please check the highlighted fields.");
+      } else {
+        setError(err.serverError || err.message || "Reset password failed.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-shell">
-      <div className="login-card">
-        <div className="login-left">
-          <div>
-            <div className="login-chip">
-              <Truck size={16} />
-              CourierXpress
-            </div>
-            <h1>Courier Management UI</h1>
-            <p>
-              Full React interface based on your database tables: users, customers, branches,
-              shipment types, shipments, shipment status history, and bills.
-            </p>
+    <div className="login-shell modern-login-shell">
+      <div className="modern-login-card">
+        <div className="modern-login-left">
+          <div className="modern-login-badge">
+            <Truck size={16} />
+            <span>CourierXpress</span>
           </div>
 
-          <div className="login-feature-grid">
-            <div className="login-feature">
-              <div style={{ fontSize: 13, color: "#cbd5e1" }}>Roles</div>
-              <div style={{ fontSize: 20, fontWeight: 700, marginTop: 6 }}>
-                Admin / Agent / Customer
-              </div>
+          <h1>Courier Management UI</h1>
+          <p>
+            Full React interface based on your database tables: users, customers,
+            branches, shipment types, shipments, shipment status history, and bills.
+          </p>
+
+          <div className="modern-login-panels">
+            <div className="modern-login-panel">
+              <span>Roles</span>
+              <strong>Admin / Agent / Customer</strong>
             </div>
-            <div className="login-feature">
-              <div style={{ fontSize: 13, color: "#cbd5e1" }}>Core Modules</div>
-              <div style={{ fontSize: 20, fontWeight: 700, marginTop: 6 }}>
-                Booking, Tracking, Billing
-              </div>
+            <div className="modern-login-panel">
+              <span>Core Modules</span>
+              <strong>Booking, Tracking, Billing</strong>
             </div>
           </div>
         </div>
 
-        <div className="login-right">
-          <div className="login-form">
-            <div className="flex gap-12" style={{ marginBottom: 20 }}>
+        <div className="modern-login-right">
+          <div className="modern-login-form">
+            {mode === "login" && (
+              <>
+                <div className="modern-login-heading">
+                  <h2>Welcome back</h2>
+                  <p>Login to continue using the system.</p>
+                </div>
+
+                <div className="mt-20">
+                  <label className="label">Username or Email</label>
+                  <input
+                    className={`input ${getFieldError("login") ? "input-error" : ""}`}
+                    value={loginForm.login}
+                    onChange={(e) => {
+                      setLoginForm((prev) => ({ ...prev, login: e.target.value }));
+                      setFieldErrors((prev) => ({ ...prev, login: "" }));
+                    }}
+                    placeholder="Enter your username or email"
+                  />
+                  {getFieldError("login") ? (
+                    <div className="field-error">{getFieldError("login")}</div>
+                  ) : null}
+                </div>
+
+                <div className="mt-16">
+                  <label className="label">Password</label>
+                  <input
+                    className={`input ${getFieldError("password") ? "input-error" : ""}`}
+                    type="password"
+                    value={loginForm.password}
+                    onChange={(e) => {
+                      setLoginForm((prev) => ({ ...prev, password: e.target.value }));
+                      setFieldErrors((prev) => ({ ...prev, password: "" }));
+                    }}
+                    placeholder="Enter your password"
+                  />
+                  {getFieldError("password") ? (
+                    <div className="field-error">{getFieldError("password")}</div>
+                  ) : null}
+                </div>
+
+                {success ? <div className="form-success">{success}</div> : null}
+                {error ? <div className="form-error">{error}</div> : null}
+
+                <div className="modern-main-action">
+                  <button
+                    className="btn modern-primary-btn"
+                    onClick={handleLogin}
+                    disabled={loading}
+                  >
+                    {loading ? "Logging in..." : "Login"}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {mode === "register" && (
+              <>
+                <div className="modern-login-heading">
+                  <h2>Create account</h2>
+                  <p>Register a new customer account.</p>
+                </div>
+
+                <div className="mt-16">
+                  <label className="label">Full Name</label>
+                  <input
+                    className={`input ${getFieldError("full_name") ? "input-error" : ""}`}
+                    value={registerForm.full_name}
+                    onChange={(e) => {
+                      setRegisterForm((prev) => ({ ...prev, full_name: e.target.value }));
+                      setFieldErrors((prev) => ({ ...prev, full_name: "" }));
+                    }}
+                  />
+                  {getFieldError("full_name") ? (
+                    <div className="field-error">{getFieldError("full_name")}</div>
+                  ) : null}
+                </div>
+
+                <div className="mt-16">
+                  <label className="label">Username</label>
+                  <input
+                    className={`input ${getFieldError("username") ? "input-error" : ""}`}
+                    value={registerForm.username}
+                    onChange={(e) => {
+                      setRegisterForm((prev) => ({ ...prev, username: e.target.value }));
+                      setFieldErrors((prev) => ({ ...prev, username: "" }));
+                    }}
+                  />
+                  {getFieldError("username") ? (
+                    <div className="field-error">{getFieldError("username")}</div>
+                  ) : null}
+                </div>
+
+                <div className="mt-16">
+                  <label className="label">Email</label>
+                  <input
+                    className={`input ${getFieldError("email") ? "input-error" : ""}`}
+                    value={registerForm.email}
+                    onChange={(e) => {
+                      setRegisterForm((prev) => ({ ...prev, email: e.target.value }));
+                      setFieldErrors((prev) => ({ ...prev, email: "" }));
+                    }}
+                  />
+                  {getFieldError("email") ? (
+                    <div className="field-error">{getFieldError("email")}</div>
+                  ) : null}
+                </div>
+
+                <div className="mt-16">
+                  <label className="label">Phone</label>
+                  <input
+                    className={`input ${getFieldError("phone") ? "input-error" : ""}`}
+                    value={registerForm.phone}
+                    onChange={(e) => {
+                      setRegisterForm((prev) => ({ ...prev, phone: e.target.value }));
+                      setFieldErrors((prev) => ({ ...prev, phone: "" }));
+                    }}
+                  />
+                  {getFieldError("phone") ? (
+                    <div className="field-error">{getFieldError("phone")}</div>
+                  ) : null}
+                </div>
+
+                <div className="mt-16">
+                  <label className="label">Address</label>
+                  <input
+                    className={`input ${getFieldError("address_line") ? "input-error" : ""}`}
+                    value={registerForm.address_line}
+                    onChange={(e) => {
+                      setRegisterForm((prev) => ({ ...prev, address_line: e.target.value }));
+                      setFieldErrors((prev) => ({ ...prev, address_line: "" }));
+                    }}
+                  />
+                  {getFieldError("address_line") ? (
+                    <div className="field-error">{getFieldError("address_line")}</div>
+                  ) : null}
+                </div>
+
+                <div className="mt-16">
+                  <label className="label">City</label>
+                  <input
+                    className={`input ${getFieldError("city") ? "input-error" : ""}`}
+                    value={registerForm.city}
+                    onChange={(e) => {
+                      setRegisterForm((prev) => ({ ...prev, city: e.target.value }));
+                      setFieldErrors((prev) => ({ ...prev, city: "" }));
+                    }}
+                  />
+                  {getFieldError("city") ? (
+                    <div className="field-error">{getFieldError("city")}</div>
+                  ) : null}
+                </div>
+
+                <div className="mt-16">
+                  <label className="label">Country</label>
+                  <input
+                    className={`input ${getFieldError("country") ? "input-error" : ""}`}
+                    value={registerForm.country}
+                    onChange={(e) => {
+                      setRegisterForm((prev) => ({ ...prev, country: e.target.value }));
+                      setFieldErrors((prev) => ({ ...prev, country: "" }));
+                    }}
+                  />
+                  {getFieldError("country") ? (
+                    <div className="field-error">{getFieldError("country")}</div>
+                  ) : null}
+                </div>
+
+                <div className="mt-16">
+                  <label className="label">Password</label>
+                  <input
+                    className={`input ${getFieldError("password") ? "input-error" : ""}`}
+                    type="password"
+                    value={registerForm.password}
+                    onChange={(e) => {
+                      setRegisterForm((prev) => ({ ...prev, password: e.target.value }));
+                      setFieldErrors((prev) => ({ ...prev, password: "" }));
+                    }}
+                  />
+                  {getFieldError("password") ? (
+                    <div className="field-error">{getFieldError("password")}</div>
+                  ) : null}
+                </div>
+
+                <div className="mt-16">
+                  <label className="label">Confirm Password</label>
+                  <input
+                    className={`input ${getFieldError("password_confirmation") ? "input-error" : ""}`}
+                    type="password"
+                    value={registerForm.password_confirmation}
+                    onChange={(e) => {
+                      setRegisterForm((prev) => ({
+                        ...prev,
+                        password_confirmation: e.target.value,
+                      }));
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        password_confirmation: "",
+                      }));
+                    }}
+                  />
+                  {getFieldError("password_confirmation") ? (
+                    <div className="field-error">
+                      {getFieldError("password_confirmation")}
+                    </div>
+                  ) : null}
+                </div>
+
+                {success ? <div className="form-success">{success}</div> : null}
+                {error ? <div className="form-error">{error}</div> : null}
+
+                <div className="modern-main-action">
+                  <button
+                    className="btn modern-primary-btn"
+                    onClick={handleRegister}
+                    disabled={loading}
+                  >
+                    {loading ? "Creating account..." : "Register"}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {mode === "forgot" && (
+              <>
+                <div className="modern-login-heading">
+                  <h2>Reset password</h2>
+                  <p>Use your username and phone number to reset password.</p>
+                </div>
+
+                <div className="mt-16">
+                  <label className="label">Username</label>
+                  <input
+                    className={`input ${getFieldError("username") ? "input-error" : ""}`}
+                    value={forgotForm.username}
+                    onChange={(e) => {
+                      setForgotForm((prev) => ({ ...prev, username: e.target.value }));
+                      setFieldErrors((prev) => ({ ...prev, username: "" }));
+                    }}
+                  />
+                  {getFieldError("username") ? (
+                    <div className="field-error">{getFieldError("username")}</div>
+                  ) : null}
+                </div>
+
+                <div className="mt-16">
+                  <label className="label">Phone Number</label>
+                  <input
+                    className={`input ${getFieldError("phone") ? "input-error" : ""}`}
+                    value={forgotForm.phone}
+                    onChange={(e) => {
+                      setForgotForm((prev) => ({ ...prev, phone: e.target.value }));
+                      setFieldErrors((prev) => ({ ...prev, phone: "" }));
+                    }}
+                  />
+                  {getFieldError("phone") ? (
+                    <div className="field-error">{getFieldError("phone")}</div>
+                  ) : null}
+                </div>
+
+                <div className="mt-16">
+                  <label className="label">New Password</label>
+                  <input
+                    className={`input ${getFieldError("password") ? "input-error" : ""}`}
+                    type="password"
+                    value={forgotForm.password}
+                    onChange={(e) => {
+                      setForgotForm((prev) => ({ ...prev, password: e.target.value }));
+                      setFieldErrors((prev) => ({ ...prev, password: "" }));
+                    }}
+                  />
+                  {getFieldError("password") ? (
+                    <div className="field-error">{getFieldError("password")}</div>
+                  ) : null}
+                </div>
+
+                <div className="mt-16">
+                  <label className="label">Confirm New Password</label>
+                  <input
+                    className={`input ${getFieldError("password_confirmation") ? "input-error" : ""}`}
+                    type="password"
+                    value={forgotForm.password_confirmation}
+                    onChange={(e) => {
+                      setForgotForm((prev) => ({
+                        ...prev,
+                        password_confirmation: e.target.value,
+                      }));
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        password_confirmation: "",
+                      }));
+                    }}
+                  />
+                  {getFieldError("password_confirmation") ? (
+                    <div className="field-error">
+                      {getFieldError("password_confirmation")}
+                    </div>
+                  ) : null}
+                </div>
+
+                {success ? <div className="form-success">{success}</div> : null}
+                {error ? <div className="form-error">{error}</div> : null}
+
+                <div className="modern-main-action">
+                  <button
+                    className="btn modern-primary-btn"
+                    onClick={handleResetPasswordByPhone}
+                    disabled={loading}
+                  >
+                    {loading ? "Resetting..." : "Reset Password"}
+                  </button>
+                </div>
+              </>
+            )}
+
+            <div className="modern-bottom-tabs">
               <button
-                className={mode === "login" ? "btn" : "btn-outline"}
+                className={`modern-tab-btn ${mode === "login" ? "active" : ""}`}
                 type="button"
                 onClick={() => {
                   setMode("login");
-                  setError("");
-                  setSuccess("");
+                  clearMessages();
                 }}
               >
                 Login
               </button>
 
               <button
-                className={mode === "register" ? "btn" : "btn-outline"}
+                className={`modern-tab-btn ${mode === "register" ? "active" : ""}`}
                 type="button"
                 onClick={() => {
                   setMode("register");
-                  setError("");
-                  setSuccess("");
+                  clearMessages();
                 }}
               >
                 Register
               </button>
+
+              <button
+                className={`modern-tab-btn ${mode === "forgot" ? "active" : ""}`}
+                type="button"
+                onClick={() => {
+                  setMode("forgot");
+                  clearMessages();
+                }}
+              >
+                Forgot Password
+              </button>
             </div>
-
-            {mode === "login" ? (
-              <>
-                <h2>Login</h2>
-                <p>Enter your credentials to access the platform.</p>
-
-                <div className="mt-20">
-                  <label className="label">Username or Email</label>
-                  <input
-                    className="input"
-                    value={loginForm.login}
-                    onChange={(e) =>
-                      setLoginForm((prev) => ({ ...prev, login: e.target.value }))
-                    }
-                    placeholder="Enter your username or email"
-                  />
-                </div>
-
-                <div className="mt-16">
-                  <label className="label">Password</label>
-                  <input
-                    className="input"
-                    type="password"
-                    value={loginForm.password}
-                    onChange={(e) =>
-                      setLoginForm((prev) => ({ ...prev, password: e.target.value }))
-                    }
-                    placeholder="Enter your password"
-                  />
-                </div>
-
-                {success ? (
-                  <div style={{ color: "green", marginTop: 16, fontWeight: 600 }}>
-                    {success}
-                  </div>
-                ) : null}
-
-                {error ? (
-                  <div style={{ color: "red", marginTop: 16, fontWeight: 600 }}>
-                    {error}
-                  </div>
-                ) : null}
-
-                <div className="flex gap-12 mt-24">
-                  <button className="btn" onClick={handleLogin} disabled={loading}>
-                    {loading ? "Logging in..." : "Login"}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <h2>Register</h2>
-                <p>Create a new customer account.</p>
-
-                <div className="mt-16">
-                  <label className="label">Full Name <span style={{ color: "red" }}>*</span></label>
-                  <input
-                    className="input"
-                    value={registerForm.full_name}
-                    onChange={(e) =>
-                      setRegisterForm((prev) => ({ ...prev, full_name: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div className="mt-16">
-                  <label className="label">Username <span style={{ color: "red" }}>*</span></label>
-                  <input
-                    className="input"
-                    value={registerForm.username}
-                    onChange={(e) =>
-                      setRegisterForm((prev) => ({ ...prev, username: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div className="mt-16">
-                  <label className="label">Email <span style={{ color: "red" }}>*</span></label>
-                  <input
-                    className="input"
-                    value={registerForm.email}
-                    onChange={(e) =>
-                      setRegisterForm((prev) => ({ ...prev, email: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div className="mt-16">
-                  <label className="label">Phone <span style={{ color: "red" }}>*</span></label>
-                  <input
-                    className="input"
-                    value={registerForm.phone}
-                    onChange={(e) =>
-                      setRegisterForm((prev) => ({ ...prev, phone: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div className="mt-16">
-                  <label className="label">Address</label>
-                  <input
-                    className="input"
-                    value={registerForm.address_line}
-                    onChange={(e) =>
-                      setRegisterForm((prev) => ({ ...prev, address_line: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div className="mt-16">
-                  <label className="label">City</label>
-                  <input
-                    className="input"
-                    value={registerForm.city}
-                    onChange={(e) =>
-                      setRegisterForm((prev) => ({ ...prev, city: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div className="mt-16">
-                  <label className="label">Country</label>
-                  <input
-                    className="input"
-                    value={registerForm.country}
-                    onChange={(e) =>
-                      setRegisterForm((prev) => ({ ...prev, country: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div className="mt-16">
-                  <label className="label">Password <span style={{ color: "red" }}>*</span></label>
-                  <input
-                    className="input"
-                    type="password"
-                    value={registerForm.password}
-                    onChange={(e) =>
-                      setRegisterForm((prev) => ({ ...prev, password: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div className="mt-16">
-                  <label className="label">Confirm Password <span style={{ color: "red" }}>*</span></label>
-                  <input
-                    className="input"
-                    type="password"
-                    value={registerForm.password_confirmation}
-                    onChange={(e) =>
-                      setRegisterForm((prev) => ({
-                        ...prev,
-                        password_confirmation: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-
-                {success ? (
-                  <div style={{ color: "green", marginTop: 16, fontWeight: 600 }}>
-                    {success}
-                  </div>
-                ) : null}
-
-                {error ? (
-                  <div style={{ color: "red", marginTop: 16, fontWeight: 600 }}>
-                    {error}
-                  </div>
-                ) : null}
-
-                <div className="flex gap-12 mt-24">
-                  <button className="btn" onClick={handleRegister} disabled={loading}>
-                    {loading ? "Creating account..." : "Register"}
-                  </button>
-                  <button 
-                    className="btn-outline" 
-                    type="button" 
-                    onClick={() => {
-                      setMode("login");
-                      setError("");
-                      setSuccess("");
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            )}
           </div>
         </div>
       </div>

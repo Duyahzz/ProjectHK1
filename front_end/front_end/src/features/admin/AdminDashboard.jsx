@@ -1,15 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Building2,
-  CircleDollarSign,
   ClipboardList,
   FileText,
   LayoutDashboard,
   MapPinned,
   Package,
   Receipt,
-  ShieldCheck,
-  Truck,
   Users,
 } from "lucide-react";
 import { api } from "../../services/api";
@@ -84,9 +81,13 @@ function HeaderBar({ authUser, onOpenProfile }) {
             {authUser?.full_name?.charAt(0)?.toUpperCase() || "A"}
           </div>
           <div>
-            <div className="cx-admin-user-name">{authUser?.full_name || "Admin"}</div>
+            <div className="cx-admin-user-name">
+              {authUser?.full_name || "Admin"}
+            </div>
             <div className="cx-admin-user-role">
-              {authUser?.role === "ADMIN" ? "Administrator" : authUser?.role || "-"}
+              {authUser?.role === "ADMIN"
+                ? "Administrator"
+                : authUser?.role || "-"}
             </div>
           </div>
         </div>
@@ -109,18 +110,34 @@ function StatusPill({ value }) {
 
   let className = "pending";
   if (status === "IN_TRANSIT") className = "transit";
-  if (status === "DELIVERED" || status === "PAID" || status === "ACTIVE") className = "delivered";
-  if (status === "CANCELLED" || status === "UNPAID" || status === "INACTIVE") className = "cancelled";
+  if (status === "DELIVERED" || status === "PAID" || status === "ACTIVE") {
+    className = "delivered";
+  }
+  if (status === "CANCELLED" || status === "UNPAID" || status === "INACTIVE") {
+    className = "cancelled";
+  }
 
   return <span className={`cx-status-pill ${className}`}>{status || "-"}</span>;
 }
 
 function DashboardView({ shipments, bills, setActiveTab }) {
-  const bookedCount = shipments.filter((item) => item.current_status === "BOOKED").length;
-  const transitCount = shipments.filter((item) => item.current_status === "IN_TRANSIT").length;
-  const deliveredCount = shipments.filter((item) => item.current_status === "DELIVERED").length;
-  const cancelledCount = shipments.filter((item) => item.current_status === "CANCELLED").length;
-  const revenue = bills.reduce((sum, item) => sum + Number(item.total_amount || 0), 0);
+  const bookedCount = shipments.filter(
+    (item) => item.current_status === "BOOKED"
+  ).length;
+  const transitCount = shipments.filter(
+    (item) => item.current_status === "IN_TRANSIT"
+  ).length;
+  const deliveredCount = shipments.filter(
+    (item) => item.current_status === "DELIVERED"
+  ).length;
+  const cancelledCount = shipments.filter(
+    (item) => item.current_status === "CANCELLED"
+  ).length;
+
+  const revenue = bills.reduce(
+    (sum, item) => sum + Number(item.total_amount || 0),
+    0
+  );
 
   return (
     <>
@@ -128,8 +145,16 @@ function DashboardView({ shipments, bills, setActiveTab }) {
         <DashboardStat title="Total Shipments" value={shipments.length} />
         <DashboardStat title="Booked" value={bookedCount} tone="pending" />
         <DashboardStat title="In Transit" value={transitCount} tone="transit" />
-        <DashboardStat title="Delivered" value={deliveredCount} tone="delivered" />
-        <DashboardStat title="Cancelled" value={cancelledCount} tone="cancelled" />
+        <DashboardStat
+          title="Delivered"
+          value={deliveredCount}
+          tone="delivered"
+        />
+        <DashboardStat
+          title="Cancelled"
+          value={cancelledCount}
+          tone="cancelled"
+        />
       </div>
 
       <div className="cx-admin-grid-two">
@@ -148,8 +173,11 @@ function DashboardView({ shipments, bills, setActiveTab }) {
               <strong>{formatCurrency(revenue)}</strong>
             </div>
             <div className="cx-admin-summary-row">
-              <span>Tracking Module</span>
-              <button className="cx-inline-link" onClick={() => setActiveTab("shipments")}>
+              <span>Shipment Management</span>
+              <button
+                className="cx-inline-link"
+                onClick={() => setActiveTab("shipments")}
+              >
                 Open Shipments
               </button>
             </div>
@@ -162,19 +190,34 @@ function DashboardView({ shipments, bills, setActiveTab }) {
           </div>
 
           <div className="cx-admin-shortcuts">
-            <button className="cx-admin-shortcut" onClick={() => setActiveTab("shipments")}>
+            <button
+              className="cx-admin-shortcut"
+              onClick={() => setActiveTab("shipments")}
+            >
               <Package size={16} />
               <span>Shipment Overview</span>
             </button>
-            <button className="cx-admin-shortcut" onClick={() => setActiveTab("customers")}>
+
+            <button
+              className="cx-admin-shortcut"
+              onClick={() => setActiveTab("customers")}
+            >
               <Users size={16} />
               <span>Customer Records</span>
             </button>
-            <button className="cx-admin-shortcut" onClick={() => setActiveTab("branches")}>
+
+            <button
+              className="cx-admin-shortcut"
+              onClick={() => setActiveTab("branches")}
+            >
               <Building2 size={16} />
               <span>Branches</span>
             </button>
-            <button className="cx-admin-shortcut" onClick={() => setActiveTab("bills")}>
+
+            <button
+              className="cx-admin-shortcut"
+              onClick={() => setActiveTab("bills")}
+            >
               <Receipt size={16} />
               <span>Billing</span>
             </button>
@@ -185,11 +228,19 @@ function DashboardView({ shipments, bills, setActiveTab }) {
   );
 }
 
-function ShipmentsView({ refreshKey }) {
+function ShipmentsView({ refreshKey, authUser, onDataChanged }) {
   const [shipmentFilter, setShipmentFilter] = useState("ALL");
   const [keyword, setKeyword] = useState("");
   const [shipments, setShipments] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [selectedShipment, setSelectedShipment] = useState(null);
+  const [statusForm, setStatusForm] = useState({
+    status: "BOOKED",
+    status_note: "",
+  });
+  const [statusLoading, setStatusLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -212,202 +263,678 @@ function ShipmentsView({ refreshKey }) {
     );
   }, [shipments, keyword]);
 
+  const openStatusEditor = (shipment) => {
+    setSelectedShipment(shipment);
+    setStatusForm({
+      status: shipment.current_status || "BOOKED",
+      status_note: "",
+    });
+    setStatusMessage("");
+  };
+
+  const handleUpdateStatus = async () => {
+    if (!selectedShipment) return;
+
+    try {
+      setStatusLoading(true);
+      setStatusMessage("");
+
+      await api.updateShipmentStatus(selectedShipment.shipment_id, {
+        status: statusForm.status,
+        status_note: statusForm.status_note,
+        updated_by_user_id: authUser?.user_id || 1,
+      });
+
+      setStatusMessage("Shipment status updated successfully.");
+      setSelectedShipment(null);
+      onDataChanged();
+    } catch (error) {
+      setStatusMessage(error.message || "Cannot update shipment status.");
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
   return (
-    <div className="cx-admin-panel">
-      <div className="cx-admin-toolbar">
-        <div className="cx-admin-search">
-          <MapPinned size={16} />
-          <input
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            placeholder="Search by tracking number, sender, or receiver..."
-          />
+    <>
+      <div className="cx-admin-panel">
+        <div className="cx-admin-toolbar">
+          <div className="cx-admin-search">
+            <MapPinned size={16} />
+            <input
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              placeholder="Search by tracking number, sender, or receiver..."
+            />
+          </div>
+
+          <select
+            className="cx-admin-select"
+            value={shipmentFilter}
+            onChange={(e) => setShipmentFilter(e.target.value)}
+          >
+            <option value="ALL">All Status</option>
+            <option value="BOOKED">BOOKED</option>
+            <option value="IN_TRANSIT">IN_TRANSIT</option>
+            <option value="DELIVERED">DELIVERED</option>
+            <option value="CANCELLED">CANCELLED</option>
+          </select>
         </div>
 
-        <select
-          className="cx-admin-select"
-          value={shipmentFilter}
-          onChange={(e) => setShipmentFilter(e.target.value)}
-        >
-          <option value="ALL">All Status</option>
-          <option value="BOOKED">BOOKED</option>
-          <option value="IN_TRANSIT">IN_TRANSIT</option>
-          <option value="DELIVERED">DELIVERED</option>
-          <option value="CANCELLED">CANCELLED</option>
-        </select>
+        <div className="cx-admin-table-wrap">
+          <table className="cx-admin-table">
+            <thead>
+              <tr>
+                <th>Tracking No</th>
+                <th>Sender</th>
+                <th>Receiver</th>
+                <th>Type</th>
+                <th>Branch</th>
+                <th>Status</th>
+                <th>Total Charge</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="8" className="cx-empty-row">
+                    Loading shipments...
+                  </td>
+                </tr>
+              ) : filteredShipments.length ? (
+                filteredShipments.map((item) => (
+                  <tr key={item.shipment_id}>
+                    <td className="cx-highlight-cell">
+                      {item.tracking_number}
+                    </td>
+                    <td>{item.sender?.full_name || "-"}</td>
+                    <td>{item.receiver?.full_name || "-"}</td>
+                    <td>
+                      {item.shipment_type?.type_name ||
+                        item.shipmentType?.type_name ||
+                        "-"}
+                    </td>
+                    <td>{item.branch?.branch_name || "-"}</td>
+                    <td>
+                      <StatusPill value={item.current_status} />
+                    </td>
+                    <td>{formatCurrency(item.total_charge || 0)}</td>
+                    <td>
+                      <button
+                        className="btn-outline"
+                        onClick={() => openStatusEditor(item)}
+                      >
+                        Change Status
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" className="cx-empty-row">
+                    No shipments found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div className="cx-admin-table-wrap">
-        <table className="cx-admin-table">
-          <thead>
-            <tr>
-              <th>Tracking No</th>
-              <th>Sender</th>
-              <th>Receiver</th>
-              <th>Type</th>
-              <th>Branch</th>
-              <th>Agent</th>
-              <th>Status</th>
-              <th>Total Charge</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="8" className="cx-empty-row">
-                  Loading shipments...
-                </td>
-              </tr>
-            ) : filteredShipments.length ? (
-              filteredShipments.map((item) => (
-                <tr key={item.shipment_id}>
-                  <td className="cx-highlight-cell">{item.tracking_number}</td>
-                  <td>{item.sender?.full_name || "-"}</td>
-                  <td>{item.receiver?.full_name || "-"}</td>
-                  <td>{item.shipment_type?.type_name || item.shipmentType?.type_name || "-"}</td>
-                  <td>{item.branch?.branch_name || "-"}</td>
-                  <td>{item.agent?.full_name || "-"}</td>
-                  <td>
-                    <StatusPill value={item.current_status} />
-                  </td>
-                  <td>{formatCurrency(item.total_charge || 0)}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="8" className="cx-empty-row">
-                  No shipments found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
+      {selectedShipment && (
+        <div className="cx-admin-panel mt-24">
+          <div className="cx-admin-panel-header">
+            <h3>Update Shipment Status</h3>
+            <p className="cx-admin-profile-subtitle">
+              Tracking: {selectedShipment.tracking_number}
+            </p>
+          </div>
+
+          <div className="grid-2">
+            <div>
+              <label className="label">Status</label>
+              <select
+                className="select"
+                value={statusForm.status}
+                onChange={(e) =>
+                  setStatusForm((prev) => ({ ...prev, status: e.target.value }))
+                }
+              >
+                <option value="BOOKED">BOOKED</option>
+                <option value="IN_TRANSIT">IN_TRANSIT</option>
+                <option value="DELIVERED">DELIVERED</option>
+                <option value="CANCELLED">CANCELLED</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="label">Note</label>
+              <input
+                className="input"
+                value={statusForm.status_note}
+                onChange={(e) =>
+                  setStatusForm((prev) => ({
+                    ...prev,
+                    status_note: e.target.value,
+                  }))
+                }
+                placeholder="Enter status note"
+              />
+            </div>
+          </div>
+
+          {statusMessage ? (
+            <div style={{ marginTop: 14, fontWeight: 600 }}>
+              {statusMessage}
+            </div>
+          ) : null}
+
+          <div className="flex gap-12 mt-24">
+            <button
+              className="btn"
+              onClick={handleUpdateStatus}
+              disabled={statusLoading}
+            >
+              {statusLoading ? "Saving..." : "Save Status"}
+            </button>
+
+            <button
+              className="btn-outline"
+              onClick={() => {
+                setSelectedShipment(null);
+                setStatusMessage("");
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
-function CustomersView() {
+function CustomersView({ refreshKey, onDataChanged }) {
+  const emptyForm = {
+    full_name: "",
+    email: "",
+    phone: "",
+    address_line: "",
+    city: "",
+    country: "Vietnam",
+  };
+
   const [query, setQuery] = useState("");
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingCustomer, setEditingCustomer] = useState(null);
+  const [form, setForm] = useState(emptyForm);
+  const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const loadCustomers = () => {
+    setLoading(true);
+    api
+      .getCustomers(query)
+      .then(setCustomers)
+      .catch((error) => {
+        console.error(error);
+        setMessage(error.message || "Cannot load customers.");
+      })
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    setLoading(true);
     const timer = setTimeout(() => {
-      api
-        .getCustomers(query)
-        .then(setCustomers)
-        .catch(console.error)
-        .finally(() => setLoading(false));
+      loadCustomers();
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, refreshKey]);
+
+  const handleSubmit = async () => {
+    try {
+      setSaving(true);
+      setMessage("");
+
+      if (editingCustomer) {
+        await api.updateCustomer(editingCustomer.customer_id, form);
+        setMessage("Customer updated successfully.");
+      } else {
+        await api.createCustomer(form);
+        setMessage("Customer created successfully.");
+      }
+
+      setForm(emptyForm);
+      setEditingCustomer(null);
+      onDataChanged();
+    } catch (error) {
+      setMessage(error.message || "Cannot save customer.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEdit = (customer) => {
+    setEditingCustomer(customer);
+    setForm({
+      full_name: customer.full_name || "",
+      email: customer.email || "",
+      phone: customer.phone || "",
+      address_line: customer.address_line || "",
+      city: customer.city || "",
+      country: customer.country || "Vietnam",
+    });
+    setMessage("");
+  };
+
+  const handleDelete = async (customer) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete customer "${customer.full_name}"?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setMessage("");
+      const res = await api.deleteCustomer(customer.customer_id);
+      setMessage(res.message || "Customer deleted successfully.");
+
+      if (editingCustomer?.customer_id === customer.customer_id) {
+        setEditingCustomer(null);
+        setForm(emptyForm);
+      }
+
+      onDataChanged();
+    } catch (error) {
+      setMessage(error.message || "Cannot delete customer.");
+      alert(error.message || "Cannot delete customer.");
+    }
+  };
 
   return (
-    <div className="cx-admin-panel">
-      <div className="cx-admin-toolbar">
-        <div className="cx-admin-search">
-          <Users size={16} />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name, phone, city, or code..."
-          />
+    <>
+      <div className="cx-admin-panel">
+        <div className="cx-admin-toolbar">
+          <div className="cx-admin-search">
+            <Users size={16} />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search by name, phone, city, or code..."
+            />
+          </div>
+        </div>
+
+        <div className="cx-admin-table-wrap">
+          <table className="cx-admin-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>City</th>
+                <th>Country</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="cx-empty-row">
+                    Loading customers...
+                  </td>
+                </tr>
+              ) : customers.length ? (
+                customers.map((item) => (
+                  <tr key={item.customer_id}>
+                    <td>{item.customer_code}</td>
+                    <td>{item.full_name}</td>
+                    <td>{item.phone}</td>
+                    <td>{item.email}</td>
+                    <td>{item.city}</td>
+                    <td>{item.country}</td>
+                    <td>
+                      <div className="flex gap-12">
+                        <button
+                          className="btn-outline"
+                          onClick={() => handleEdit(item)}
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          className="btn-outline"
+                          onClick={() => handleDelete(item)}
+                          style={{ color: "#dc2626", borderColor: "#fecaca" }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7" className="cx-empty-row">
+                    No customers found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <div className="cx-admin-table-wrap">
-        <table className="cx-admin-table">
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Name</th>
-              <th>Phone</th>
-              <th>Email</th>
-              <th>City</th>
-              <th>Country</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="6" className="cx-empty-row">
-                  Loading customers...
-                </td>
-              </tr>
-            ) : customers.length ? (
-              customers.map((item) => (
-                <tr key={item.customer_id}>
-                  <td>{item.customer_code}</td>
-                  <td>{item.full_name}</td>
-                  <td>{item.phone}</td>
-                  <td>{item.email}</td>
-                  <td>{item.city}</td>
-                  <td>{item.country}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="6" className="cx-empty-row">
-                  No customers found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="cx-admin-panel mt-24">
+        <div className="cx-admin-panel-header">
+          <h3>{editingCustomer ? "Edit Customer" : "Add Customer"}</h3>
+        </div>
+
+        <div className="grid-2">
+          <div>
+            <label className="label">Full Name</label>
+            <input
+              className="input"
+              value={form.full_name}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, full_name: e.target.value }))
+              }
+            />
+          </div>
+
+          <div>
+            <label className="label">Email</label>
+            <input
+              className="input"
+              value={form.email}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, email: e.target.value }))
+              }
+            />
+          </div>
+
+          <div>
+            <label className="label">Phone</label>
+            <input
+              className="input"
+              value={form.phone}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, phone: e.target.value }))
+              }
+            />
+          </div>
+
+          <div>
+            <label className="label">Address</label>
+            <input
+              className="input"
+              value={form.address_line}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, address_line: e.target.value }))
+              }
+            />
+          </div>
+
+          <div>
+            <label className="label">City</label>
+            <input
+              className="input"
+              value={form.city}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, city: e.target.value }))
+              }
+            />
+          </div>
+
+          <div>
+            <label className="label">Country</label>
+            <input
+              className="input"
+              value={form.country}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, country: e.target.value }))
+              }
+            />
+          </div>
+        </div>
+
+        {message ? (
+          <div style={{ marginTop: 14, fontWeight: 600 }}>{message}</div>
+        ) : null}
+
+        <div className="flex gap-12 mt-24">
+          <button className="btn" onClick={handleSubmit} disabled={saving}>
+            {saving
+              ? "Saving..."
+              : editingCustomer
+              ? "Update Customer"
+              : "Add Customer"}
+          </button>
+
+          <button
+            className="btn-outline"
+            onClick={() => {
+              setEditingCustomer(null);
+              setForm(emptyForm);
+              setMessage("");
+            }}
+          >
+            Reset
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
-function BranchesView() {
+function BranchesView({ refreshKey, onDataChanged }) {
   const [branches, setBranches] = useState([]);
+  const [form, setForm] = useState({
+    branch_code: "",
+    branch_name: "",
+    city: "",
+    phone: "",
+    email: "",
+    status: "ACTIVE",
+  });
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const loadBranches = () => {
+    api.getBranches().then(setBranches).catch(console.error);
+  };
 
   useEffect(() => {
-    api.getBranches().then(setBranches).catch(console.error);
-  }, []);
+    loadBranches();
+  }, [refreshKey]);
+
+  const handleCreateBranch = async () => {
+    try {
+      setSaving(true);
+      setMessage("");
+      await api.createBranch(form);
+      setMessage("Branch created successfully.");
+      setForm({
+        branch_code: "",
+        branch_name: "",
+        city: "",
+        phone: "",
+        email: "",
+        status: "ACTIVE",
+      });
+      onDataChanged();
+    } catch (error) {
+      setMessage(error.message || "Cannot create branch.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleStatusChange = async (branchId, status) => {
+    try {
+      await api.updateBranchStatus(branchId, { status });
+      onDataChanged();
+    } catch (error) {
+      alert(error.message || "Cannot update branch status.");
+    }
+  };
 
   return (
-    <div className="cx-admin-panel">
-      <div className="cx-admin-table-wrap">
-        <table className="cx-admin-table">
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Branch Name</th>
-              <th>City</th>
-              <th>Phone</th>
-              <th>Email</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {branches.length ? (
-              branches.map((item) => (
-                <tr key={item.branch_id}>
-                  <td>{item.branch_code}</td>
-                  <td>{item.branch_name}</td>
-                  <td>{item.city}</td>
-                  <td>{item.phone}</td>
-                  <td>{item.email}</td>
-                  <td>
-                    <StatusPill value={item.status} />
+    <>
+      <div className="cx-admin-panel">
+        <div className="cx-admin-table-wrap">
+          <table className="cx-admin-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Branch Name</th>
+                <th>City</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {branches.length ? (
+                branches.map((item) => (
+                  <tr key={item.branch_id}>
+                    <td>{item.branch_code}</td>
+                    <td>{item.branch_name}</td>
+                    <td>{item.city}</td>
+                    <td>{item.phone}</td>
+                    <td>{item.email}</td>
+                    <td>
+                      <StatusPill value={item.status} />
+                    </td>
+                    <td>
+                      <div className="flex gap-12">
+                        <button
+                          className="btn-outline"
+                          onClick={() =>
+                            handleStatusChange(item.branch_id, "ACTIVE")
+                          }
+                        >
+                          Set Active
+                        </button>
+                        <button
+                          className="btn-outline"
+                          onClick={() =>
+                            handleStatusChange(item.branch_id, "INACTIVE")
+                          }
+                        >
+                          Set Inactive
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7" className="cx-empty-row">
+                    Loading branches...
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="6" className="cx-empty-row">
-                  Loading branches...
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+
+      <div className="cx-admin-panel mt-24">
+        <div className="cx-admin-panel-header">
+          <h3>Add Branch</h3>
+        </div>
+
+        <div className="grid-2">
+          <div>
+            <label className="label">Branch Code</label>
+            <input
+              className="input"
+              value={form.branch_code}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, branch_code: e.target.value }))
+              }
+            />
+          </div>
+
+          <div>
+            <label className="label">Branch Name</label>
+            <input
+              className="input"
+              value={form.branch_name}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, branch_name: e.target.value }))
+              }
+            />
+          </div>
+
+          <div>
+            <label className="label">City</label>
+            <input
+              className="input"
+              value={form.city}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, city: e.target.value }))
+              }
+            />
+          </div>
+
+          <div>
+            <label className="label">Phone</label>
+            <input
+              className="input"
+              value={form.phone}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, phone: e.target.value }))
+              }
+            />
+          </div>
+
+          <div>
+            <label className="label">Email</label>
+            <input
+              className="input"
+              value={form.email}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, email: e.target.value }))
+              }
+            />
+          </div>
+
+          <div>
+            <label className="label">Status</label>
+            <select
+              className="select"
+              value={form.status}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, status: e.target.value }))
+              }
+            >
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="INACTIVE">INACTIVE</option>
+            </select>
+          </div>
+        </div>
+
+        {message ? (
+          <div style={{ marginTop: 14, fontWeight: 600 }}>{message}</div>
+        ) : null}
+
+        <div className="flex gap-12 mt-24">
+          <button
+            className="btn"
+            onClick={handleCreateBranch}
+            disabled={saving}
+          >
+            {saving ? "Saving..." : "Create Branch"}
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -540,7 +1067,9 @@ function AdminProfilePage({ authUser, onBack }) {
       <div className="cx-admin-panel-header cx-admin-profile-header-row">
         <div>
           <h3>Administrator Profile</h3>
-          <p className="cx-admin-profile-subtitle">Detailed account information</p>
+          <p className="cx-admin-profile-subtitle">
+            Detailed account information
+          </p>
         </div>
 
         <button className="btn-outline" onClick={onBack}>
@@ -554,9 +1083,13 @@ function AdminProfilePage({ authUser, onBack }) {
         </div>
 
         <div>
-          <div className="cx-admin-profile-name">{authUser?.full_name || "Admin"}</div>
+          <div className="cx-admin-profile-name">
+            {authUser?.full_name || "Admin"}
+          </div>
           <div className="cx-admin-profile-role">
-            {authUser?.role === "ADMIN" ? "Administrator" : authUser?.role || "-"}
+            {authUser?.role === "ADMIN"
+              ? "Administrator"
+              : authUser?.role || "-"}
           </div>
         </div>
       </div>
@@ -622,24 +1155,17 @@ export default function AdminDashboard({ onLogout }) {
     loadDashboardData();
   }, [refreshKey]);
 
-  const transitCount = useMemo(
-    () => shipments.filter((item) => item.current_status === "IN_TRANSIT").length,
-    [shipments]
-  );
-
-  const deliveredCount = useMemo(
-    () => shipments.filter((item) => item.current_status === "DELIVERED").length,
-    [shipments]
-  );
-
-  const revenue = useMemo(
-    () => bills.reduce((sum, item) => sum + Number(item.total_amount || 0), 0),
-    [bills]
-  );
+  const handleRefresh = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
 
   return (
     <div className="cx-admin-layout">
-      <AdminMenu activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
+      <AdminMenu
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onLogout={onLogout}
+      />
 
       <main className="cx-admin-main">
         <HeaderBar
@@ -648,16 +1174,42 @@ export default function AdminDashboard({ onLogout }) {
         />
 
         {activeTab === "dashboard" && (
-          <DashboardView shipments={shipments} bills={bills} setActiveTab={setActiveTab} />
+          <DashboardView
+            shipments={shipments}
+            bills={bills}
+            setActiveTab={setActiveTab}
+          />
         )}
 
         {activeTab === "admin-profile" && (
-          <AdminProfilePage authUser={authUser} onBack={() => setActiveTab("dashboard")} />
+          <AdminProfilePage
+            authUser={authUser}
+            onBack={() => setActiveTab("dashboard")}
+          />
         )}
 
-        {activeTab === "shipments" && <ShipmentsView refreshKey={refreshKey} />}
-        {activeTab === "customers" && <CustomersView />}
-        {activeTab === "branches" && <BranchesView />}
+        {activeTab === "shipments" && (
+          <ShipmentsView
+            refreshKey={refreshKey}
+            authUser={authUser}
+            onDataChanged={handleRefresh}
+          />
+        )}
+
+        {activeTab === "customers" && (
+          <CustomersView
+            refreshKey={refreshKey}
+            onDataChanged={handleRefresh}
+          />
+        )}
+
+        {activeTab === "branches" && (
+          <BranchesView
+            refreshKey={refreshKey}
+            onDataChanged={handleRefresh}
+          />
+        )}
+
         {activeTab === "types" && <TypesView />}
         {activeTab === "bills" && <BillsView />}
         {activeTab === "reports" && <ReportsView />}

@@ -12,7 +12,11 @@ async function request(path, options = {}) {
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error(data?.message || `Request failed: ${response.status}`);
+    const err = new Error(data?.message || `Request failed: ${response.status}`);
+    err.status = response.status;
+    err.validationErrors = data?.errors || {};
+    err.serverError = data?.error || "";
+    throw err;
   }
 
   return data;
@@ -36,10 +40,43 @@ export const api = {
       method: "POST",
     }),
 
+  resetPasswordByPhone: (payload) =>
+    request("/auth/reset-password-by-phone", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
   getCustomers: (search = "") =>
     request(`/customers${search ? `?search=${encodeURIComponent(search)}` : ""}`),
 
+  createCustomer: (payload) =>
+    request("/customers", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  deleteCustomer: (id) =>
+  request(`/customers/${id}`, {
+    method: "DELETE",
+  }),
+  updateCustomer: (id, payload) =>
+    request(`/customers/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+
   getBranches: () => request("/branches"),
+
+  createBranch: (payload) =>
+    request("/branches", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  updateBranchStatus: (id, payload) =>
+    request(`/branches/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
 
   getShipmentTypes: () => request("/shipment-types"),
 
