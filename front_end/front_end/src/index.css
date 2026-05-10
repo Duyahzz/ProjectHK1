@@ -1165,4 +1165,15 @@ th {
   .modern-tab-btn {
     width: 100%;
   }
+  .input-error {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 1px #dc2626 inset;
+}
+
+.field-error {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #dc2626;
+  font-weight: 600;
+}
 }

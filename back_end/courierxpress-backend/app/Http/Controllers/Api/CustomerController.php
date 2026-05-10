@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Shipment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class CustomerController extends Controller
 {
@@ -30,16 +32,33 @@ class CustomerController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $validator = Validator::make($request->all(), [
             'full_name' => 'required|string|max:100',
-            'email' => 'nullable|email|max:100',
-            'phone' => 'nullable|string|max:20',
-            'address_line' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:100',
-            'country' => 'nullable|string|max:100',
+            'email' => 'required|email|max:100',
+            'phone' => 'required|string|max:20|unique:customers,phone',
+            'address_line' => 'required|string|max:255',
+            'city' => 'required|string|max:100',
+            'country' => 'required|string|max:100',
         ], [
             'full_name.required' => 'Customer name is required.',
+            'email.required' => 'Email is required.',
+            'email.email' => 'Email format is invalid.',
+            'phone.required' => 'Phone number is required.',
+            'phone.unique' => 'This phone number already exists.',
+            'address_line.required' => 'Address is required.',
+            'city.required' => 'City is required.',
+            'country.required' => 'Country is required.',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
 
         $nextCustomerId = (Customer::max('customer_id') ?? 0) + 1;
         $customerCode = 'CUS' . str_pad($nextCustomerId, 3, '0', STR_PAD_LEFT);
@@ -47,37 +66,63 @@ class CustomerController extends Controller
         $customer = Customer::create([
             'customer_code' => $customerCode,
             'full_name' => trim($data['full_name']),
-            'email' => $data['email'] ?? null,
-            'phone' => $data['phone'] ?? null,
-            'address_line' => $data['address_line'] ?? null,
-            'city' => $data['city'] ?? null,
-            'country' => $data['country'] ?? 'Vietnam',
+            'email' => trim($data['email']),
+            'phone' => trim($data['phone']),
+            'address_line' => trim($data['address_line']),
+            'city' => trim($data['city']),
+            'country' => trim($data['country']),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        return response()->json($customer, 201);
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer created successfully.',
+            'customer' => $customer,
+        ], 201);
     }
 
     public function update(Request $request, Customer $customer)
     {
-        $data = $request->validate([
+        $validator = Validator::make($request->all(), [
             'full_name' => 'required|string|max:100',
-            'email' => 'nullable|email|max:100',
-            'phone' => 'nullable|string|max:20',
-            'address_line' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:100',
-            'country' => 'nullable|string|max:100',
+            'email' => 'required|email|max:100',
+            'phone' => [
+                'required',
+                'string',
+                'max:20',
+                Rule::unique('customers', 'phone')->ignore($customer->customer_id, 'customer_id'),
+            ],
+            'address_line' => 'required|string|max:255',
+            'city' => 'required|string|max:100',
+            'country' => 'required|string|max:100',
         ], [
             'full_name.required' => 'Customer name is required.',
+            'email.required' => 'Email is required.',
+            'email.email' => 'Email format is invalid.',
+            'phone.required' => 'Phone number is required.',
+            'phone.unique' => 'This phone number already exists.',
+            'address_line.required' => 'Address is required.',
+            'city.required' => 'City is required.',
+            'country.required' => 'Country is required.',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
         $customer->full_name = trim($data['full_name']);
-        $customer->email = $data['email'] ?? null;
-        $customer->phone = $data['phone'] ?? null;
-        $customer->address_line = $data['address_line'] ?? null;
-        $customer->city = $data['city'] ?? null;
-        $customer->country = $data['country'] ?? 'Vietnam';
+        $customer->email = trim($data['email']);
+        $customer->phone = trim($data['phone']);
+        $customer->address_line = trim($data['address_line']);
+        $customer->city = trim($data['city']);
+        $customer->country = trim($data['country']);
         $customer->updated_at = now();
         $customer->save();
 

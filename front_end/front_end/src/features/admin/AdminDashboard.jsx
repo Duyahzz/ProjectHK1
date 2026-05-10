@@ -472,6 +472,7 @@ function CustomersView({ refreshKey, onDataChanged }) {
   const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const loadCustomers = () => {
     setLoading(true);
@@ -493,10 +494,21 @@ function CustomersView({ refreshKey, onDataChanged }) {
     return () => clearTimeout(timer);
   }, [query, refreshKey]);
 
+  const getFieldError = (name) => {
+    const value = fieldErrors?.[name];
+    if (Array.isArray(value)) return value[0];
+    return value || "";
+  };
+
+  const clearFieldError = (name) => {
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
   const handleSubmit = async () => {
     try {
       setSaving(true);
       setMessage("");
+      setFieldErrors({});
 
       if (editingCustomer) {
         await api.updateCustomer(editingCustomer.customer_id, form);
@@ -510,7 +522,12 @@ function CustomersView({ refreshKey, onDataChanged }) {
       setEditingCustomer(null);
       onDataChanged();
     } catch (error) {
-      setMessage(error.message || "Cannot save customer.");
+      if (error.status === 422) {
+        setFieldErrors(error.validationErrors || {});
+        setMessage("Please check the highlighted fields.");
+      } else {
+        setMessage(error.message || "Cannot save customer.");
+      }
     } finally {
       setSaving(false);
     }
@@ -527,6 +544,7 @@ function CustomersView({ refreshKey, onDataChanged }) {
       country: customer.country || "Vietnam",
     });
     setMessage("");
+    setFieldErrors({});
   };
 
   const handleDelete = async (customer) => {
@@ -637,67 +655,91 @@ function CustomersView({ refreshKey, onDataChanged }) {
           <div>
             <label className="label">Full Name</label>
             <input
-              className="input"
+              className={`input ${getFieldError("full_name") ? "input-error" : ""}`}
               value={form.full_name}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, full_name: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, full_name: e.target.value }));
+                clearFieldError("full_name");
+              }}
             />
+            {getFieldError("full_name") ? (
+              <div className="field-error">{getFieldError("full_name")}</div>
+            ) : null}
           </div>
 
           <div>
             <label className="label">Email</label>
             <input
-              className="input"
+              className={`input ${getFieldError("email") ? "input-error" : ""}`}
               value={form.email}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, email: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, email: e.target.value }));
+                clearFieldError("email");
+              }}
             />
+            {getFieldError("email") ? (
+              <div className="field-error">{getFieldError("email")}</div>
+            ) : null}
           </div>
 
           <div>
             <label className="label">Phone</label>
             <input
-              className="input"
+              className={`input ${getFieldError("phone") ? "input-error" : ""}`}
               value={form.phone}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, phone: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, phone: e.target.value }));
+                clearFieldError("phone");
+              }}
             />
+            {getFieldError("phone") ? (
+              <div className="field-error">{getFieldError("phone")}</div>
+            ) : null}
           </div>
 
           <div>
             <label className="label">Address</label>
             <input
-              className="input"
+              className={`input ${getFieldError("address_line") ? "input-error" : ""}`}
               value={form.address_line}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, address_line: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, address_line: e.target.value }));
+                clearFieldError("address_line");
+              }}
             />
+            {getFieldError("address_line") ? (
+              <div className="field-error">{getFieldError("address_line")}</div>
+            ) : null}
           </div>
 
           <div>
             <label className="label">City</label>
             <input
-              className="input"
+              className={`input ${getFieldError("city") ? "input-error" : ""}`}
               value={form.city}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, city: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, city: e.target.value }));
+                clearFieldError("city");
+              }}
             />
+            {getFieldError("city") ? (
+              <div className="field-error">{getFieldError("city")}</div>
+            ) : null}
           </div>
 
           <div>
             <label className="label">Country</label>
             <input
-              className="input"
+              className={`input ${getFieldError("country") ? "input-error" : ""}`}
               value={form.country}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, country: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, country: e.target.value }));
+                clearFieldError("country");
+              }}
             />
+            {getFieldError("country") ? (
+              <div className="field-error">{getFieldError("country")}</div>
+            ) : null}
           </div>
         </div>
 
@@ -719,6 +761,7 @@ function CustomersView({ refreshKey, onDataChanged }) {
             onClick={() => {
               setEditingCustomer(null);
               setForm(emptyForm);
+              setFieldErrors({});
               setMessage("");
             }}
           >
@@ -731,17 +774,20 @@ function CustomersView({ refreshKey, onDataChanged }) {
 }
 
 function BranchesView({ refreshKey, onDataChanged }) {
-  const [branches, setBranches] = useState([]);
-  const [form, setForm] = useState({
+  const emptyForm = {
     branch_code: "",
     branch_name: "",
     city: "",
     phone: "",
     email: "",
     status: "ACTIVE",
-  });
+  };
+
+  const [branches, setBranches] = useState([]);
+  const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const loadBranches = () => {
     api.getBranches().then(setBranches).catch(console.error);
@@ -751,23 +797,34 @@ function BranchesView({ refreshKey, onDataChanged }) {
     loadBranches();
   }, [refreshKey]);
 
+  const getFieldError = (name) => {
+    const value = fieldErrors?.[name];
+    if (Array.isArray(value)) return value[0];
+    return value || "";
+  };
+
+  const clearFieldError = (name) => {
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
   const handleCreateBranch = async () => {
     try {
       setSaving(true);
       setMessage("");
-      await api.createBranch(form);
-      setMessage("Branch created successfully.");
-      setForm({
-        branch_code: "",
-        branch_name: "",
-        city: "",
-        phone: "",
-        email: "",
-        status: "ACTIVE",
-      });
+      setFieldErrors({});
+
+      const res = await api.createBranch(form);
+
+      setMessage(res.message || "Branch created successfully.");
+      setForm(emptyForm);
       onDataChanged();
     } catch (error) {
-      setMessage(error.message || "Cannot create branch.");
+      if (error.status === 422) {
+        setFieldErrors(error.validationErrors || {});
+        setMessage("Please check the highlighted fields.");
+      } else {
+        setMessage(error.message || "Cannot create branch.");
+      }
     } finally {
       setSaving(false);
     }
@@ -814,17 +871,13 @@ function BranchesView({ refreshKey, onDataChanged }) {
                       <div className="flex gap-12">
                         <button
                           className="btn-outline"
-                          onClick={() =>
-                            handleStatusChange(item.branch_id, "ACTIVE")
-                          }
+                          onClick={() => handleStatusChange(item.branch_id, "ACTIVE")}
                         >
                           Set Active
                         </button>
                         <button
                           className="btn-outline"
-                          onClick={() =>
-                            handleStatusChange(item.branch_id, "INACTIVE")
-                          }
+                          onClick={() => handleStatusChange(item.branch_id, "INACTIVE")}
                         >
                           Set Inactive
                         </button>
@@ -853,70 +906,94 @@ function BranchesView({ refreshKey, onDataChanged }) {
           <div>
             <label className="label">Branch Code</label>
             <input
-              className="input"
+              className={`input ${getFieldError("branch_code") ? "input-error" : ""}`}
               value={form.branch_code}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, branch_code: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, branch_code: e.target.value }));
+                clearFieldError("branch_code");
+              }}
             />
+            {getFieldError("branch_code") ? (
+              <div className="field-error">{getFieldError("branch_code")}</div>
+            ) : null}
           </div>
 
           <div>
             <label className="label">Branch Name</label>
             <input
-              className="input"
+              className={`input ${getFieldError("branch_name") ? "input-error" : ""}`}
               value={form.branch_name}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, branch_name: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, branch_name: e.target.value }));
+                clearFieldError("branch_name");
+              }}
             />
+            {getFieldError("branch_name") ? (
+              <div className="field-error">{getFieldError("branch_name")}</div>
+            ) : null}
           </div>
 
           <div>
             <label className="label">City</label>
             <input
-              className="input"
+              className={`input ${getFieldError("city") ? "input-error" : ""}`}
               value={form.city}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, city: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, city: e.target.value }));
+                clearFieldError("city");
+              }}
             />
+            {getFieldError("city") ? (
+              <div className="field-error">{getFieldError("city")}</div>
+            ) : null}
           </div>
 
           <div>
             <label className="label">Phone</label>
             <input
-              className="input"
+              className={`input ${getFieldError("phone") ? "input-error" : ""}`}
               value={form.phone}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, phone: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, phone: e.target.value }));
+                clearFieldError("phone");
+              }}
             />
+            {getFieldError("phone") ? (
+              <div className="field-error">{getFieldError("phone")}</div>
+            ) : null}
           </div>
 
           <div>
             <label className="label">Email</label>
             <input
-              className="input"
+              className={`input ${getFieldError("email") ? "input-error" : ""}`}
               value={form.email}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, email: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, email: e.target.value }));
+                clearFieldError("email");
+              }}
             />
+            {getFieldError("email") ? (
+              <div className="field-error">{getFieldError("email")}</div>
+            ) : null}
           </div>
 
           <div>
             <label className="label">Status</label>
             <select
-              className="select"
+              className={`select ${getFieldError("status") ? "input-error" : ""}`}
               value={form.status}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, status: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, status: e.target.value }));
+                clearFieldError("status");
+              }}
             >
               <option value="ACTIVE">ACTIVE</option>
               <option value="INACTIVE">INACTIVE</option>
             </select>
+            {getFieldError("status") ? (
+              <div className="field-error">{getFieldError("status")}</div>
+            ) : null}
           </div>
         </div>
 
@@ -931,6 +1008,17 @@ function BranchesView({ refreshKey, onDataChanged }) {
             disabled={saving}
           >
             {saving ? "Saving..." : "Create Branch"}
+          </button>
+
+          <button
+            className="btn-outline"
+            onClick={() => {
+              setForm(emptyForm);
+              setFieldErrors({});
+              setMessage("");
+            }}
+          >
+            Reset
           </button>
         </div>
       </div>

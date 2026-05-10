@@ -20,9 +20,24 @@ class AuthController extends Controller
             'email' => 'required|email|max:100|unique:users,email',
             'phone' => 'required|string|max:20|unique:users,phone',
             'password' => 'required|string|min:6|confirmed',
-            'address_line' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:100',
-            'country' => 'nullable|string|max:100',
+            'address_line' => 'required|string|max:255',
+            'city' => 'required|string|max:100',
+            'country' => 'required|string|max:100',
+        ], [
+            'full_name.required' => 'Full name is required.',
+            'username.required' => 'Username is required.',
+            'username.unique' => 'This username already exists.',
+            'email.required' => 'Email is required.',
+            'email.email' => 'Email format is invalid.',
+            'email.unique' => 'This email already exists.',
+            'phone.required' => 'Phone number is required.',
+            'phone.unique' => 'This phone number already exists.',
+            'password.required' => 'Password is required.',
+            'password.min' => 'Password must be at least 6 characters.',
+            'password.confirmed' => 'Password confirmation does not match.',
+            'address_line.required' => 'Address is required.',
+            'city.required' => 'City is required.',
+            'country.required' => 'Country is required.',
         ]);
 
         if ($validator->fails()) {
@@ -34,13 +49,15 @@ class AuthController extends Controller
         }
 
         try {
-            $result = DB::transaction(function () use ($request) {
+            $data = $validator->validated();
+
+            $result = DB::transaction(function () use ($data) {
                 $user = User::create([
-                    'username' => trim($request->username),
-                    'password_hash' => Hash::make($request->password),
-                    'full_name' => trim($request->full_name),
-                    'email' => trim($request->email),
-                    'phone' => trim($request->phone),
+                    'username' => trim($data['username']),
+                    'password_hash' => Hash::make($data['password']),
+                    'full_name' => trim($data['full_name']),
+                    'email' => trim($data['email']),
+                    'phone' => trim($data['phone']),
                     'role' => 'CUSTOMER',
                     'branch_id' => null,
                     'is_active' => 1,
@@ -53,12 +70,12 @@ class AuthController extends Controller
                 Customer::create([
                     'user_id' => $user->user_id,
                     'customer_code' => $customerCode,
-                    'full_name' => trim($request->full_name),
-                    'email' => trim($request->email),
-                    'phone' => trim($request->phone),
-                    'address_line' => $request->address_line ? trim($request->address_line) : null,
-                    'city' => $request->city ? trim($request->city) : null,
-                    'country' => $request->country ? trim($request->country) : 'Vietnam',
+                    'full_name' => trim($data['full_name']),
+                    'email' => trim($data['email']),
+                    'phone' => trim($data['phone']),
+                    'address_line' => trim($data['address_line']),
+                    'city' => trim($data['city']),
+                    'country' => trim($data['country']),
                 ]);
 
                 return $user->fresh();
@@ -83,6 +100,9 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'login' => 'required|string',
             'password' => 'required|string',
+        ], [
+            'login.required' => 'Username or email is required.',
+            'password.required' => 'Password is required.',
         ]);
 
         if ($validator->fails()) {
@@ -150,6 +170,12 @@ class AuthController extends Controller
             'username' => 'required|string|max:50',
             'phone' => 'required|string|max:20',
             'password' => 'required|string|min:6|confirmed',
+        ], [
+            'username.required' => 'Username is required.',
+            'phone.required' => 'Phone number is required.',
+            'password.required' => 'New password is required.',
+            'password.min' => 'New password must be at least 6 characters.',
+            'password.confirmed' => 'Password confirmation does not match.',
         ]);
 
         if ($validator->fails()) {

@@ -4,12 +4,16 @@ async function request(path, options = {}) {
   const response = await fetch(`${API_URL}${path}`, {
     headers: {
       "Content-Type": "application/json",
+      Accept: "application/json",
       ...(options.headers || {}),
     },
     ...options,
   });
 
-  const data = await response.json().catch(() => null);
+  const contentType = response.headers.get("content-type") || "";
+  const data = contentType.includes("application/json")
+    ? await response.json().catch(() => null)
+    : null;
 
   if (!response.ok) {
     const err = new Error(data?.message || `Request failed: ${response.status}`);
@@ -54,14 +58,16 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  deleteCustomer: (id) =>
-  request(`/customers/${id}`, {
-    method: "DELETE",
-  }),
+
   updateCustomer: (id, payload) =>
     request(`/customers/${id}`, {
       method: "PUT",
       body: JSON.stringify(payload),
+    }),
+
+  deleteCustomer: (id) =>
+    request(`/customers/${id}`, {
+      method: "DELETE",
     }),
 
   getBranches: () => request("/branches"),
@@ -96,7 +102,7 @@ export const api = {
 
   updateShipmentStatus: (id, payload) =>
     request(`/shipments/${id}/status`, {
-      method: "POST",
+      method: "PATCH",
       body: JSON.stringify(payload),
     }),
 

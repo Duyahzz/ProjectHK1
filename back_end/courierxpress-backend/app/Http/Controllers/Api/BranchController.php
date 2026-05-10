@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class BranchController extends Controller
 {
@@ -17,21 +18,33 @@ class BranchController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $validator = Validator::make($request->all(), [
             'branch_code' => 'required|string|max:20|unique:branches,branch_code',
             'branch_name' => 'required|string|max:100',
             'city' => 'required|string|max:100',
-            'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:100',
+            'phone' => 'nullable|string|max:20|unique:branches,phone',
+            'email' => 'nullable|email|max:100|unique:branches,email',
             'status' => 'required|string|in:ACTIVE,INACTIVE',
         ], [
             'branch_code.required' => 'Branch code is required.',
             'branch_code.unique' => 'This branch code already exists.',
             'branch_name.required' => 'Branch name is required.',
             'city.required' => 'City is required.',
+            'phone.unique' => 'This phone number already exists.',
+            'email.unique' => 'This email already exists.',
             'status.required' => 'Status is required.',
             'status.in' => 'Status must be ACTIVE or INACTIVE.',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
 
         $branch = Branch::create([
             'branch_code' => trim($data['branch_code']),
@@ -51,12 +64,20 @@ class BranchController extends Controller
 
     public function updateStatus(Request $request, $branchId)
     {
-        $data = $request->validate([
+        $validator = Validator::make($request->all(), [
             'status' => 'required|string|in:ACTIVE,INACTIVE',
         ], [
             'status.required' => 'Status is required.',
             'status.in' => 'Status must be ACTIVE or INACTIVE.',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
 
         $branch = Branch::find($branchId);
 
@@ -67,7 +88,7 @@ class BranchController extends Controller
             ], 404);
         }
 
-        $branch->status = $data['status'];
+        $branch->status = $validator->validated()['status'];
         $branch->save();
 
         return response()->json([
