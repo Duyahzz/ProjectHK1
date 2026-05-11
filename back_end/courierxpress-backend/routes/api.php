@@ -23,6 +23,8 @@ Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/logout', [AuthController::class, 'logout']);
 Route::post('/auth/reset-password-by-phone', [AuthController::class, 'resetPasswordByPhone']);
+Route::post('/auth/update-profile', [AuthController::class, 'updateProfile']);
+Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
 Route::delete('/customers/{customer}', [CustomerController::class, 'destroy']);
 /*
 |--------------------------------------------------------------------------

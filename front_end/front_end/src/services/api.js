@@ -49,6 +49,16 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  updateProfile: (payload) =>
+    request("/auth/update-profile", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  changePassword: (payload) =>
+    request("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 
   getCustomers: (search = "") =>
     request(`/customers${search ? `?search=${encodeURIComponent(search)}` : ""}`),

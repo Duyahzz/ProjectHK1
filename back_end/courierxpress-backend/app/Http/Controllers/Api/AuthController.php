@@ -214,6 +214,90 @@ class AuthController extends Controller
         ]);
     }
 
+    public function updateProfile(Request $request)
+    {
+        $userId = $request->input('user_id');
+        $user = User::find($userId);
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'User not found.'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'full_name' => 'required|string|max:100',
+            'email' => 'required|email|max:100|unique:users,email,' . $user->user_id . ',user_id',
+            'phone' => 'required|string|max:20|unique:users,phone,' . $user->user_id . ',user_id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user->update([
+            'full_name' => $request->full_name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile updated successfully.',
+            'user' => $this->formatUser($user->fresh('branch')),
+        ]);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|integer',
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:6|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = User::find($request->user_id);
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'User not found.'], 404);
+        }
+
+        // Kiểm tra mật khẩu cũ
+        $storedPassword = (string) $user->password_hash;
+        $isHashed = str_starts_with($storedPassword, '$2y$') || str_starts_with($storedPassword, '$2b$');
+        
+        if ($isHashed) {
+            $passwordOk = Hash::check($request->current_password, $storedPassword);
+        } else {
+            $passwordOk = $request->current_password === $storedPassword;
+        }
+
+        if (!$passwordOk) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Current password is incorrect.',
+            ], 422);
+        }
+
+        $user->password_hash = Hash::make($request->new_password);
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password changed successfully.',
+        ]);
+    }
+
     public function logout(Request $request)
     {
         return response()->json([
