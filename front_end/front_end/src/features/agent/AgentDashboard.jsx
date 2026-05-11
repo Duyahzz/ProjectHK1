@@ -569,7 +569,7 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
   );
 }
 
-function StatusView({ authUser }) {
+function StatusView({ authUser, onStatusUpdated }) {
   const [tracking, setTracking] = useState("TRK002");
   const [details, setDetails] = useState(null);
   const [status, setStatus] = useState("IN_TRANSIT");
@@ -607,7 +607,7 @@ function StatusView({ authUser }) {
       }));
       setNote("");
       alert("Status updated successfully");
-      loadDashboardData(); // Refresh the main shipments list
+      if (onStatusUpdated) onStatusUpdated();
     } catch (error) {
       alert(error.message || "Cannot update shipment status");
     }
@@ -897,7 +897,7 @@ export default function AgentDashboard({ onLogout }) {
           />
         )}
 
-        {activeTab === "status" && <StatusView authUser={authUser} />}
+        {activeTab === "status" && <StatusView authUser={authUser} onStatusUpdated={loadDashboardData} />}
 
         {activeTab === "bills" && <BillsView bills={bills} />}
       </main>
