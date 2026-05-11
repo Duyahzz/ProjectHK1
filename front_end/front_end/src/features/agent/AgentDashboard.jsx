@@ -282,7 +282,7 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
     total_charge: "",
     parcel_name: "",
     item_description: "",
-    expected_delivery_date: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
+    expected_delivery_date: new Date().toISOString().split('T')[0],
     notes: "",
   });
 
@@ -345,7 +345,7 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
       total_charge: "",
       parcel_name: "",
       item_description: "",
-      expected_delivery_date: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
+      expected_delivery_date: new Date().toISOString().split('T')[0],
       notes: "",
     });
     setCreateMessage("");
@@ -526,11 +526,11 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
         </div>
 
         <div>
-          <label className="label">Expected Delivery Date & Time</label>
+          <label className="label">Expected Delivery Date (Time is auto-set to current)</label>
           <input
             className="input"
-            type="datetime-local"
-            min={new Date().toISOString().slice(0, 16)}
+            type="date"
+            min={new Date().toISOString().split('T')[0]}
             value={formData.expected_delivery_date}
             onChange={(e) => handleChange("expected_delivery_date", e.target.value)}
             required
