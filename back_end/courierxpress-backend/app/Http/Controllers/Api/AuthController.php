@@ -15,14 +15,14 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'full_name' => 'required|string|max:100',
-            'username' => 'required|string|max:50|unique:users,username',
+            'full_name' => 'required|string|min:3|max:100',
+            'username' => 'required|string|min:3|max:50|unique:users,username',
             'email' => 'required|email|max:100|unique:users,email',
-            'phone' => 'required|string|max:20|unique:users,phone',
+            'phone' => 'required|string|min:8|max:20|unique:users,phone',
             'password' => 'required|string|min:6|confirmed',
-            'address_line' => 'required|string|max:255',
-            'city' => 'required|string|max:100',
-            'country' => 'required|string|max:100',
+            'address_line' => 'required|string|min:3|max:255',
+            'city' => 'required|string|min:2|max:100',
+            'country' => 'required|string|min:2|max:100',
         ], [
             'full_name.required' => 'Full name is required.',
             'username.required' => 'Username is required.',
