@@ -282,7 +282,7 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
     total_charge: "",
     parcel_name: "",
     item_description: "",
-    expected_delivery_date: "",
+    expected_delivery_date: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
     notes: "",
   });
 
@@ -304,7 +304,7 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
       if (value.length >= 3) { // Start searching after 3 characters
         const customer = customers.find(c => c.phone && c.phone.includes(value));
         if (customer && customer.phone === value) { // Exact match
-           autoFill(type, customer);
+          autoFill(type, customer);
         }
       }
     }
@@ -345,7 +345,7 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
       total_charge: "",
       parcel_name: "",
       item_description: "",
-      expected_delivery_date: "",
+      expected_delivery_date: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
       notes: "",
     });
     setCreateMessage("");
@@ -1018,12 +1018,12 @@ export default function AgentDashboard({ onLogout }) {
         )}
 
         {activeTab === "agent-profile" && (
-          <AgentProfilePage 
-            authUser={authUser} 
+          <AgentProfilePage
+            authUser={authUser}
             onUpdateSuccess={(newUser) => {
               setAuthUser(newUser);
               localStorage.setItem("cx_auth_user", JSON.stringify(newUser));
-            }} 
+            }}
           />
         )}
 
