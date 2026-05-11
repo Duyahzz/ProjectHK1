@@ -25,7 +25,7 @@ export default function CreateShipmentPage({ onShipmentCreated }) {
     total_charge: "",
     parcel_name: "",
     item_description: "",
-    expected_delivery_date: new Date().toISOString().split('T')[0],
+    expected_delivery_date: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
     notes: "",
   });
 
@@ -58,7 +58,7 @@ export default function CreateShipmentPage({ onShipmentCreated }) {
       total_charge: "",
       parcel_name: "",
       item_description: "",
-      expected_delivery_date: new Date().toISOString().split('T')[0],
+      expected_delivery_date: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
       notes: "",
     });
   };
@@ -194,8 +194,8 @@ export default function CreateShipmentPage({ onShipmentCreated }) {
 
             <div className="grid-2">
               <div>
-                <label className="label">Expected Delivery Date</label>
-                <input className="input" type="date" min={new Date().toISOString().split('T')[0]} value={formData.expected_delivery_date} onChange={(e) => handleChange("expected_delivery_date", e.target.value)} required />
+                <label className="label">Expected Delivery Date & Time</label>
+                <input className="input" type="datetime-local" min={new Date().toISOString().slice(0, 16)} value={formData.expected_delivery_date} onChange={(e) => handleChange("expected_delivery_date", e.target.value)} required />
               </div>
               <div>
                 <label className="label">Assigned Agent ID</label>
