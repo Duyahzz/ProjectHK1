@@ -109,6 +109,7 @@ class ShipmentController extends Controller
             'current_status' => $request->current_status ?? 'BOOKED',
             'booking_date' => now(),
             'notes' => $request->notes,
+            'expected_delivery_date' => $request->expected_delivery_date,
             'booking_source' => 'AGENT_COUNTER',
         ];
 
