@@ -18,8 +18,8 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
   const [fieldErrors, setFieldErrors] = useState({});
 
   const [loginForm, setLoginForm] = useState({
-    login: "admin01",
-    password: "123456",
+    login: "",
+    password: "",
   });
 
   const [registerForm, setRegisterForm] = useState({
