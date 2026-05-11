@@ -71,7 +71,7 @@ export const api = {
 
   updateCustomer: (id, payload) =>
     request(`/customers/${id}`, {
-      method: "PUT",
+      method: "POST",
       body: JSON.stringify(payload),
     }),
 
@@ -90,7 +90,7 @@ export const api = {
 
   updateBranchStatus: (id, payload) =>
     request(`/branches/${id}/status`, {
-      method: "PATCH",
+      method: "POST",
       body: JSON.stringify(payload),
     }),
 

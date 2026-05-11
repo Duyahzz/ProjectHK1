@@ -35,11 +35,11 @@ Route::get('/dashboard', [DashboardController::class, 'index']);
 
 Route::get('/branches', [BranchController::class, 'index']);
 Route::post('/branches', [BranchController::class, 'store']);
-Route::patch('/branches/{branch}/status', [BranchController::class, 'updateStatus']);
+Route::post('/branches/{branch}/status', [BranchController::class, 'updateStatus']);
 
 Route::get('/customers', [CustomerController::class, 'index']);
 Route::post('/customers', [CustomerController::class, 'store']);
-Route::put('/customers/{customer}', [CustomerController::class, 'update']);
+Route::post('/customers/{customer}', [CustomerController::class, 'update']);
 Route::delete('/customers/{customer}', [CustomerController::class, 'destroy']);
 
 Route::get('/shipment-types', [ShipmentTypeController::class, 'index']);
