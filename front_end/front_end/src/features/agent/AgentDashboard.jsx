@@ -1085,20 +1085,40 @@ export default function AgentDashboard({ onLogout }) {
     end: new Date().toISOString().split('T')[0]
   });
 
-  const loadDashboardData = (page = 1) => {
+  const loadDashboardStats = () => {
     const params = {
       ...(authUser?.branch_id ? { branch_id: authUser.branch_id } : {}),
       start_date: dateRange.start,
       end_date: dateRange.end,
-      page: page
+      paginate: "false"
     };
-    api.getShipments(params).then(setShipments).catch(console.error);
-    api.getBills(params).then(setBills).catch(console.error);
     api.getDashboardStats(params).then(setStats).catch(console.error);
   };
 
+  const loadShipments = (page = 1) => {
+    const params = {
+      ...(authUser?.branch_id ? { branch_id: authUser.branch_id } : {}),
+      start_date: dateRange.start,
+      end_date: dateRange.end,
+      page: page,
+      per_page: 10
+    };
+    api.getShipments(params).then(setShipments).catch(console.error);
+  };
+
+  const loadBills = () => {
+    const params = {
+      ...(authUser?.branch_id ? { branch_id: authUser.branch_id } : {}),
+      start_date: dateRange.start,
+      end_date: dateRange.end
+    };
+    api.getBills(params).then(setBills).catch(console.error);
+  };
+
   useEffect(() => {
-    loadDashboardData();
+    loadDashboardStats();
+    loadShipments();
+    loadBills();
   }, [refreshKey, dateRange]);
 
   const handleShipmentCreated = () => {
@@ -1138,7 +1158,7 @@ export default function AgentDashboard({ onLogout }) {
         {activeTab === "bookings" && (
           <BookingsView
             shipments={shipments}
-            onPageChange={(page) => loadDashboardData(page)}
+            onPageChange={(page) => loadShipments(page)}
           />
         )}
 
@@ -1149,7 +1169,7 @@ export default function AgentDashboard({ onLogout }) {
           />
         )}
 
-        {activeTab === "status" && <StatusView authUser={authUser} onStatusUpdated={loadDashboardData} />}
+        {activeTab === "status" && <StatusView authUser={authUser} onStatusUpdated={() => { loadShipments(); loadDashboardStats(); }} />}
 
         {activeTab === "bills" && <BillsView bills={bills} />}
       </main>

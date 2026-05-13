@@ -121,20 +121,23 @@ function StatusPill({ value }) {
 }
 
 function DashboardView({ shipments, bills, setActiveTab }) {
-  const bookedCount = shipments.filter(
+  const shipmentList = Array.isArray(shipments) ? shipments : (shipments?.data || []);
+  const billList = Array.isArray(bills) ? bills : (bills?.data || []);
+
+  const bookedCount = shipmentList.filter(
     (item) => item.current_status === "BOOKED"
   ).length;
-  const transitCount = shipments.filter(
+  const transitCount = shipmentList.filter(
     (item) => item.current_status === "IN_TRANSIT"
   ).length;
-  const deliveredCount = shipments.filter(
+  const deliveredCount = shipmentList.filter(
     (item) => item.current_status === "DELIVERED"
   ).length;
-  const cancelledCount = shipments.filter(
+  const cancelledCount = shipmentList.filter(
     (item) => item.current_status === "CANCELLED"
   ).length;
 
-  const revenue = bills.reduce(
+  const revenue = billList.reduce(
     (sum, item) => sum + Number(item.total_amount || 0),
     0
   );
@@ -142,7 +145,7 @@ function DashboardView({ shipments, bills, setActiveTab }) {
   return (
     <>
       <div className="cx-admin-stat-grid">
-        <DashboardStat title="Total Shipments" value={shipments.length} />
+        <DashboardStat title="Total Shipments" value={shipmentList.length} />
         <DashboardStat title="Booked" value={bookedCount} tone="pending" />
         <DashboardStat title="In Transit" value={transitCount} tone="transit" />
         <DashboardStat
@@ -166,7 +169,7 @@ function DashboardView({ shipments, bills, setActiveTab }) {
           <div className="cx-admin-summary-list">
             <div className="cx-admin-summary-row">
               <span>Total Bills</span>
-              <strong>{bills.length}</strong>
+              <strong>{billList.length}</strong>
             </div>
             <div className="cx-admin-summary-row">
               <span>Total Revenue</span>
@@ -252,10 +255,11 @@ function ShipmentsView({ refreshKey, authUser, onDataChanged }) {
   }, [shipmentFilter, refreshKey]);
 
   const filteredShipments = useMemo(() => {
+    const list = Array.isArray(shipments) ? shipments : (shipments?.data || []);
     const q = keyword.trim().toLowerCase();
-    if (!q) return shipments;
+    if (!q) return list;
 
-    return shipments.filter(
+    return list.filter(
       (item) =>
         item.tracking_number?.toLowerCase().includes(q) ||
         item.sender?.full_name?.toLowerCase().includes(q) ||
@@ -752,8 +756,8 @@ function CustomersView({ refreshKey, onDataChanged }) {
             {saving
               ? "Saving..."
               : editingCustomer
-              ? "Update Customer"
-              : "Add Customer"}
+                ? "Update Customer"
+                : "Add Customer"}
           </button>
 
           <button

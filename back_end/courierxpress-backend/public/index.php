@@ -1,5 +1,11 @@
 <?php
 
+if (!function_exists('request_parse_body')) {
+    function request_parse_body() {
+        return [$_POST, $_FILES];
+    }
+}
+
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 
