@@ -10,35 +10,53 @@ class DashboardController extends Controller
 {
     public function index(\Illuminate\Http\Request $request)
     {
-        $shipmentQuery = Shipment::query();
-        $billQuery = Bill::query();
+        $start = $request->start_date;
+        $end = $request->end_date;
+        $branchId = $request->branch_id;
 
-        if ($request->filled('branch_id')) {
-            $shipmentQuery->where('origin_branch_id', $request->branch_id);
-            $billQuery->whereHas('shipment', function($q) use ($request) {
-                $q->where('origin_branch_id', $request->branch_id);
+        $shipmentBase = Shipment::query();
+        if ($branchId) {
+            $shipmentBase->where('origin_branch_id', $branchId);
+        }
+        if ($start) {
+            $shipmentBase->where('booking_date', '>=', $start . ' 00:00:00');
+        }
+        if ($end) {
+            $shipmentBase->where('booking_date', '<=', $end . ' 23:59:59');
+        }
+
+        $totalShipments = (clone $shipmentBase)->count();
+        $booked = (clone $shipmentBase)->whereIn('current_status', ['BOOKED', 'PENDING'])->count();
+        $inTransit = (clone $shipmentBase)->whereIn('current_status', ['IN_TRANSIT', 'PICKED_UP', 'OUT_FOR_DELIVERY', 'SHIPMENT_ARRIVED'])->count();
+        $delivered = (clone $shipmentBase)->where('current_status', 'DELIVERED')->count();
+        $cancelled = (clone $shipmentBase)->where('current_status', 'CANCELLED')->count();
+        
+        $billBase = Bill::query();
+        if ($branchId) {
+            $billBase->whereHas('shipment', function($q) use ($branchId) {
+                $q->where('origin_branch_id', $branchId);
             });
         }
-
-        if ($request->filled('start_date')) {
-            $shipmentQuery->whereDate('booking_date', '>=', $request->start_date);
-            $billQuery->whereDate('created_at', '>=', $request->start_date);
+        if ($start) {
+            $billBase->where('issued_at', '>=', $start . ' 00:00:00');
+        }
+        if ($end) {
+            $billBase->where('issued_at', '<=', $end . ' 23:59:59');
         }
 
-        if ($request->filled('end_date')) {
-            $shipmentQuery->whereDate('booking_date', '<=', $request->end_date);
-            $billQuery->whereDate('created_at', '<=', $request->end_date);
-        }
+        $revenue = (clone $billBase)->sum('total_amount');
+        $unpaidBills = (clone $billBase)->where('payment_status', 'UNPAID')->count();
+        $totalBills = (clone $billBase)->count();
 
         return response()->json([
-            'total_shipments' => (clone $shipmentQuery)->count(),
-            'booked' => (clone $shipmentQuery)->where('current_status', 'BOOKED')->count(),
-            'in_transit' => (clone $shipmentQuery)->where('current_status', 'IN_TRANSIT')->count(),
-            'delivered' => (clone $shipmentQuery)->where('current_status', 'DELIVERED')->count(),
-            'cancelled' => (clone $shipmentQuery)->where('current_status', 'CANCELLED')->count(),
-            'revenue' => (clone $billQuery)->sum('total_amount'),
-            'unpaid_bills' => (clone $billQuery)->where('payment_status', 'UNPAID')->count(),
-            'total_bills' => (clone $billQuery)->count(),
+            'total_shipments' => $totalShipments,
+            'booked' => $booked,
+            'in_transit' => $inTransit,
+            'delivered' => $delivered,
+            'cancelled' => $cancelled,
+            'revenue' => (float)$revenue,
+            'unpaid_bills' => $unpaidBills,
+            'total_bills' => $totalBills,
         ]);
     }
 }
