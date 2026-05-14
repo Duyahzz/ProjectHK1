@@ -62,11 +62,18 @@ function AgentMenu({ activeTab, setActiveTab, onLogout }) {
   );
 }
 
-function HeaderBar({ authUser, onOpenProfile }) {
+function HeaderBar({ authUser, onOpenProfile, branchName }) {
   return (
     <div className="cx-admin-header">
       <div>
-        <h1>Agent Dashboard</h1>
+        <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+          <h1>Agent Dashboard</h1>
+          {branchName && (
+            <span className="badge badge-blue" style={{ fontSize: "14px", padding: "6px 12px" }}>
+              {branchName}
+            </span>
+          )}
+        </div>
         <p>Branch shipment booking, status update, billing, and search.</p>
       </div>
 
@@ -454,24 +461,28 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
           SENDER INFORMATION (Auto-fill for returning customers)
         </div>
         <div className="grid-2">
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Sender Phone</label>
-            <input className="input" type="text" value={formData.sender_phone} onChange={(e) => handleChange("sender_phone", e.target.value)} required placeholder="Enter phone to auto-fill..." />
+            <input className="input" type="text" value={formData.sender_phone} onChange={(e) => handleChange("sender_phone", e.target.value)} required placeholder="Enter phone..." maxLength="20" />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.sender_phone.length >= 20 ? "red" : "#999" }}>{formData.sender_phone.length}/20</span>
             <small style={{ color: "#666", fontSize: "11px" }}>Tip: System fills details for existing customers.</small>
           </div>
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Sender Name</label>
-            <input className="input" type="text" value={formData.sender_name} onChange={(e) => handleChange("sender_name", e.target.value)} required />
+            <input className="input" type="text" value={formData.sender_name} onChange={(e) => handleChange("sender_name", e.target.value)} required placeholder="Full name..." maxLength="100" />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.sender_name.length >= 100 ? "red" : "#999" }}>{formData.sender_name.length}/100</span>
           </div>
         </div>
         <div className="grid-2">
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Sender Address</label>
-            <input className="input" type="text" value={formData.sender_address} onChange={(e) => handleChange("sender_address", e.target.value)} required />
+            <input className="input" type="text" value={formData.sender_address} onChange={(e) => handleChange("sender_address", e.target.value)} required placeholder="Enter address..." maxLength="250" />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.sender_address.length >= 250 ? "red" : "#999" }}>{formData.sender_address.length}/250</span>
           </div>
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Sender City</label>
-            <input className="input" type="text" value={formData.sender_city} onChange={(e) => handleChange("sender_city", e.target.value)} />
+            <input className="input" type="text" value={formData.sender_city} onChange={(e) => handleChange("sender_city", e.target.value)} placeholder="City..." maxLength="100" />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.sender_city.length >= 100 ? "red" : "#999" }}>{formData.sender_city.length}/100</span>
           </div>
         </div>
 
@@ -480,23 +491,27 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
           RECEIVER INFORMATION (Type phone to search)
         </div>
         <div className="grid-2">
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Receiver Phone</label>
-            <input className="input" type="text" value={formData.receiver_phone} onChange={(e) => handleChange("receiver_phone", e.target.value)} required placeholder="Search by phone..." />
+            <input className="input" type="text" value={formData.receiver_phone} onChange={(e) => handleChange("receiver_phone", e.target.value)} required placeholder="Search phone..." maxLength="20" />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.receiver_phone.length >= 20 ? "red" : "#999" }}>{formData.receiver_phone.length}/20</span>
           </div>
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Receiver Name</label>
-            <input className="input" type="text" value={formData.receiver_name} onChange={(e) => handleChange("receiver_name", e.target.value)} required />
+            <input className="input" type="text" value={formData.receiver_name} onChange={(e) => handleChange("receiver_name", e.target.value)} required placeholder="Full name..." maxLength="100" />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.receiver_name.length >= 100 ? "red" : "#999" }}>{formData.receiver_name.length}/100</span>
           </div>
         </div>
         <div className="grid-2">
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Receiver Address</label>
-            <input className="input" type="text" value={formData.receiver_address} onChange={(e) => handleChange("receiver_address", e.target.value)} required />
+            <input className="input" type="text" value={formData.receiver_address} onChange={(e) => handleChange("receiver_address", e.target.value)} required placeholder="Address..." maxLength="250" />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.receiver_address.length >= 250 ? "red" : "#999" }}>{formData.receiver_address.length}/250</span>
           </div>
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Receiver City</label>
-            <input className="input" type="text" value={formData.receiver_city} onChange={(e) => handleChange("receiver_city", e.target.value)} />
+            <input className="input" type="text" value={formData.receiver_city} onChange={(e) => handleChange("receiver_city", e.target.value)} placeholder="City..." maxLength="100" />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.receiver_city.length >= 100 ? "red" : "#999" }}>{formData.receiver_city.length}/100</span>
           </div>
         </div>
 
@@ -585,18 +600,20 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
         </div>
 
         <div className="grid-2">
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Parcel Name</label>
             <input
               className="input"
               type="text"
               value={formData.parcel_name}
               onChange={(e) => handleChange("parcel_name", e.target.value)}
-              placeholder="e.g. Refrigerator, Shoes"
+              placeholder="e.g. Shoes"
               required
+              maxLength="100"
             />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.parcel_name.length >= 100 ? "red" : "#999" }}>{formData.parcel_name.length}/100</span>
           </div>
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Item Description</label>
             <input
               className="input"
@@ -604,7 +621,9 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
               value={formData.item_description}
               onChange={(e) => handleChange("item_description", e.target.value)}
               placeholder="Detailed description..."
+              maxLength={250}
             />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.item_description.length >= 250 ? "red" : "#999" }}>{formData.item_description.length}/250</span>
           </div>
         </div>
 
@@ -712,9 +731,10 @@ function StatusView({ authUser, onStatusUpdated }) {
           <div className="toolbar">
             <input
               className="input"
-              placeholder="Enter tracking number"
+              placeholder="Tracking number..."
               value={tracking}
               onChange={(e) => setTracking(e.target.value)}
+              maxLength={20}
             />
             <button className="btn" onClick={search}>
               {loading ? "Searching..." : "Search"}
@@ -733,9 +753,10 @@ function StatusView({ authUser, onStatusUpdated }) {
 
             <input
               className="input"
-              placeholder="Remark"
+              placeholder="Remark..."
               value={note}
               onChange={(e) => setNote(e.target.value)}
+              maxLength={250}
             />
           </div>
 
@@ -860,6 +881,7 @@ function BillsView({ bills }) {
 }
 
 function AgentProfilePage({ authUser, onUpdateSuccess }) {
+  const [profileTab, setProfileTab] = useState("INFO"); // 'INFO' or 'PASSWORD'
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
     full_name: authUser?.full_name || "",
@@ -927,139 +949,165 @@ function AgentProfilePage({ authUser, onUpdateSuccess }) {
   };
 
   return (
-    <div className="cx-admin-grid-two">
-      <div className="cx-admin-panel">
-        <div className="cx-admin-panel-header">
-          <h3>Agent Profile</h3>
-          <p className="cx-admin-profile-subtitle">Manage your personal information</p>
+    <div className="cx-admin-profile-container" style={{ maxWidth: "800px", margin: "0 auto" }}>
+      {/* Tab Navigation */}
+      <div className="tabs" style={{ marginBottom: "24px" }}>
+        <button
+          className={`tab-btn ${profileTab === 'INFO' ? 'active' : ''}`}
+          onClick={() => { setProfileTab('INFO'); setError(""); setMessage(""); }}
+        >
+          <UserCircle2 size={16} style={{ marginRight: "8px", verticalAlign: "middle" }} />
+          Personal Information
+        </button>
+        <button
+          className={`tab-btn ${profileTab === 'PASSWORD' ? 'active' : ''}`}
+          onClick={() => { setProfileTab('PASSWORD'); setError(""); setMessage(""); }}
+        >
+          <ShieldCheck size={16} style={{ marginRight: "8px", verticalAlign: "middle" }} />
+          Security & Password
+        </button>
+      </div>
+
+      {message && <div style={{ color: "green", marginBottom: "15px", fontWeight: "bold", padding: "10px", background: "#dcfce7", borderRadius: "12px" }}>{message}</div>}
+      {error && <div style={{ color: "red", marginBottom: "15px", fontWeight: "bold", padding: "10px", background: "#fee2e2", borderRadius: "12px" }}>{error}</div>}
+
+      {profileTab === 'INFO' ? (
+        <div className="cx-admin-panel animate-fade-in">
+          <div className="cx-admin-panel-header">
+            <h3>Agent Profile</h3>
+            <p className="cx-admin-profile-subtitle">Manage your personal information</p>
+          </div>
+
+          <div className="form-grid">
+            <div className="cx-admin-profile-hero">
+              <div className="cx-admin-profile-avatar-large">
+                {authUser?.full_name?.charAt(0)?.toUpperCase() || "A"}
+              </div>
+              <div>
+                <div className="cx-admin-profile-name">{authUser?.full_name || "Agent"}</div>
+                <div className="cx-admin-profile-role">AGENT</div>
+              </div>
+            </div>
+
+            <div className="grid-1" style={{ gap: "15px" }}>
+              <div>
+                <label className="label">Full Name</label>
+                <input
+                  className="input"
+                  disabled={!isEditing}
+                  value={profileData.full_name}
+                  onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
+                  placeholder="Full Name..."
+                  maxLength={100}
+                />
+              </div>
+              <div>
+                <label className="label">Email Address</label>
+                <input
+                  className="input"
+                  disabled={!isEditing}
+                  value={profileData.email}
+                  onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                  placeholder="Email..."
+                  maxLength={100}
+                />
+              </div>
+              <div>
+                <label className="label">Phone Number</label>
+                <input
+                  className="input"
+                  disabled={!isEditing}
+                  value={profileData.phone}
+                  onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                  placeholder="Phone..."
+                  maxLength={20}
+                />
+              </div>
+              <div className="cx-admin-profile-item" style={{ border: "none", padding: 0 }}>
+                <span>Username: </span>
+                <strong>{authUser?.username}</strong>
+              </div>
+            </div>
+
+            <div className="flex gap-12 mt-16">
+              {!isEditing ? (
+                <button type="button" className="btn" onClick={() => setIsEditing(true)}>
+                  Edit Profile
+                </button>
+              ) : (
+                <>
+                  <button type="button" className="btn" onClick={handleUpdateProfile} disabled={loading}>
+                    {loading ? "Saving..." : "Save Changes"}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-outline"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setProfileData({
+                        full_name: authUser.full_name,
+                        email: authUser.email,
+                        phone: authUser.phone,
+                      });
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
-
-        {message && <div style={{ color: "green", marginBottom: "15px", fontWeight: "bold" }}>{message}</div>}
-        {error && <div style={{ color: "red", marginBottom: "15px", fontWeight: "bold" }}>{error}</div>}
-
-        <div className="form-grid">
-          <div className="cx-admin-profile-hero">
-            <div className="cx-admin-profile-avatar-large">
-              {authUser?.full_name?.charAt(0)?.toUpperCase() || "A"}
-            </div>
-            <div>
-              <div className="cx-admin-profile-name">{authUser?.full_name || "Agent"}</div>
-              <div className="cx-admin-profile-role">AGENT</div>
-            </div>
+      ) : (
+        <div className="cx-admin-panel animate-fade-in">
+          <div className="cx-admin-panel-header">
+            <h3>Change Password</h3>
+            <p className="cx-admin-profile-subtitle">Update your account security</p>
           </div>
 
-          <div className="grid-1" style={{ gap: "15px" }}>
-            <div>
-              <label className="label">Full Name</label>
-              <input
-                className="input"
-                disabled={!isEditing}
-                value={profileData.full_name}
-                onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
-              />
+          <div className="form-grid">
+            <div className="grid-1" style={{ gap: "15px" }}>
+              <div>
+                <label className="label">Current Password</label>
+                <input
+                  type="password"
+                  className="input"
+                  value={passData.current_password}
+                  onChange={(e) => setPassData({ ...passData, current_password: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="separator" style={{ margin: "5px 0" }} />
+              <div>
+                <label className="label">New Password</label>
+                <input
+                  type="password"
+                  className="input"
+                  value={passData.new_password}
+                  onChange={(e) => setPassData({ ...passData, new_password: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label className="label">Confirm New Password</label>
+                <input
+                  type="password"
+                  className="input"
+                  value={passData.new_password_confirmation}
+                  onChange={(e) => setPassData({ ...passData, new_password_confirmation: e.target.value })}
+                  required
+                />
+              </div>
             </div>
-            <div>
-              <label className="label">Email Address</label>
-              <input
-                className="input"
-                disabled={!isEditing}
-                value={profileData.email}
-                onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="label">Phone Number</label>
-              <input
-                className="input"
-                disabled={!isEditing}
-                value={profileData.phone}
-                onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-              />
-            </div>
-            <div className="cx-admin-profile-item" style={{ border: "none", padding: 0 }}>
-              <span>Username: </span>
-              <strong>{authUser?.username}</strong>
-            </div>
-          </div>
 
-          <div className="flex gap-12 mt-16">
-            {!isEditing ? (
-              <button type="button" className="btn" onClick={() => setIsEditing(true)}>
-                Edit Profile
+            <div className="mt-16">
+              <button type="button" className="btn" onClick={handleChangePassword} disabled={loading}>
+                {loading ? "Updating..." : "Update Password"}
               </button>
-            ) : (
-              <>
-                <button type="button" className="btn" onClick={handleUpdateProfile} disabled={loading}>
-                  {loading ? "Saving..." : "Save Changes"}
-                </button>
-                <button
-                  type="button"
-                  className="btn-outline"
-                  onClick={() => {
-                    setIsEditing(false);
-                    setProfileData({
-                      full_name: authUser.full_name,
-                      email: authUser.email,
-                      phone: authUser.phone,
-                    });
-                  }}
-                >
-                  Cancel
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="cx-admin-panel">
-        <div className="cx-admin-panel-header">
-          <h3>Change Password</h3>
-          <p className="cx-admin-profile-subtitle">Update your account security</p>
-        </div>
-
-        <div className="form-grid">
-          <div className="grid-1" style={{ gap: "15px" }}>
-            <div>
-              <label className="label">Current Password</label>
-              <input
-                type="password"
-                className="input"
-                value={passData.current_password}
-                onChange={(e) => setPassData({ ...passData, current_password: e.target.value })}
-                required
-              />
-            </div>
-            <div className="separator" style={{ margin: "5px 0" }} />
-            <div>
-              <label className="label">New Password</label>
-              <input
-                type="password"
-                className="input"
-                value={passData.new_password}
-                onChange={(e) => setPassData({ ...passData, new_password: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <label className="label">Confirm New Password</label>
-              <input
-                type="password"
-                className="input"
-                value={passData.new_password_confirmation}
-                onChange={(e) => setPassData({ ...passData, new_password_confirmation: e.target.value })}
-                required
-              />
             </div>
           </div>
-
-          <div className="mt-16">
-            <button type="button" className="btn" onClick={handleChangePassword} disabled={loading}>
-              {loading ? "Updating..." : "Update Password"}
-            </button>
-          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -1078,12 +1126,15 @@ export default function AgentDashboard({ onLogout }) {
     revenue: 0
   });
   const [bills, setBills] = useState([]);
+  const [branches, setBranches] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [dateRange, setDateRange] = useState({
     start: new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0]
   });
+
+  const currentBranch = branches.find(b => b.branch_id === authUser?.branch_id);
 
   const loadDashboardStats = () => {
     const params = {
@@ -1116,6 +1167,10 @@ export default function AgentDashboard({ onLogout }) {
   };
 
   useEffect(() => {
+    api.getBranches().then(setBranches).catch(console.error); // Load branches to get the name
+  }, []);
+
+  useEffect(() => {
     loadDashboardStats();
     loadShipments();
     loadBills();
@@ -1134,6 +1189,7 @@ export default function AgentDashboard({ onLogout }) {
         <HeaderBar
           authUser={authUser}
           onOpenProfile={() => setActiveTab("agent-profile")}
+          branchName={currentBranch?.branch_name}
         />
 
         {activeTab === "dashboard" && (

@@ -217,7 +217,8 @@ function TrackView({
             <input
               value={trackingNumber}
               onChange={(e) => setTrackingNumber(e.target.value)}
-              placeholder="Enter tracking number..."
+              placeholder="Tracking number..."
+              maxLength={20}
             />
           </div>
 
@@ -335,6 +336,7 @@ function HistoryView({ shipments }) {
 }
 
 function CustomerProfilePage({ authUser, customerProfile, onUpdateSuccess }) {
+  const [profileTab, setProfileTab] = useState("INFO"); // 'INFO' or 'PASSWORD'
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
     full_name: customerProfile?.full_name || authUser?.full_name || "",
@@ -403,175 +405,213 @@ function CustomerProfilePage({ authUser, customerProfile, onUpdateSuccess }) {
   };
 
   return (
-    <div className="cx-admin-grid-two">
-      <div className="cx-admin-panel">
-        <div className="cx-admin-panel-header">
-          <h3>Customer Profile</h3>
-          <p className="cx-admin-profile-subtitle">Manage your account and address</p>
+    <div className="cx-admin-profile-container" style={{ maxWidth: "800px", margin: "0 auto" }}>
+      {/* Tab Navigation */}
+      <div className="tabs" style={{ marginBottom: "24px" }}>
+        <button 
+          className={`tab-btn ${profileTab === 'INFO' ? 'active' : ''}`} 
+          onClick={() => { setProfileTab('INFO'); setError(""); setMessage(""); }}
+        >
+          <UserCircle2 size={16} style={{ marginRight: "8px", verticalAlign: "middle" }} />
+          Personal Information
+        </button>
+        <button 
+          className={`tab-btn ${profileTab === 'PASSWORD' ? 'active' : ''}`} 
+          onClick={() => { setProfileTab('PASSWORD'); setError(""); setMessage(""); }}
+        >
+          <ShieldCheck size={16} style={{ marginRight: "8px", verticalAlign: "middle" }} />
+          Security & Password
+        </button>
+      </div>
+
+      {message && <div style={{ color: "green", marginBottom: "15px", fontWeight: "bold", padding: "10px", background: "#dcfce7", borderRadius: "12px" }}>{message}</div>}
+      {error && <div style={{ color: "red", marginBottom: "15px", fontWeight: "bold", padding: "10px", background: "#fee2e2", borderRadius: "12px" }}>{error}</div>}
+
+      {profileTab === 'INFO' ? (
+        <div className="cx-admin-panel animate-fade-in">
+          <div className="cx-admin-panel-header">
+            <h3>Customer Profile</h3>
+            <p className="cx-admin-profile-subtitle">Manage your account and address</p>
+          </div>
+
+          <div className="form-grid">
+            <div className="cx-admin-profile-hero">
+              <div className="cx-admin-profile-avatar-large">
+                {authUser?.full_name?.charAt(0)?.toUpperCase() || "C"}
+              </div>
+              <div>
+                <div className="cx-admin-profile-name">{authUser?.full_name || "Customer"}</div>
+                <div className="cx-admin-profile-role">CUSTOMER</div>
+              </div>
+            </div>
+
+            <div className="grid-1" style={{ gap: "12px" }}>
+              <div className="grid-2">
+                <div style={{ position: "relative" }}>
+                  <label className="label">Full Name</label>
+                  <input
+                    className="input"
+                    disabled={!isEditing}
+                    value={profileData.full_name}
+                    onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
+                    placeholder="Full Name..."
+                    maxLength={100}
+                  />
+                  <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: profileData.full_name.length >= 100 ? "red" : "#999" }}>{profileData.full_name.length}/100</span>
+                </div>
+                <div>
+                  <label className="label">Username</label>
+                  <input className="input" disabled value={authUser?.username} />
+                </div>
+              </div>
+
+              <div className="grid-2">
+                <div style={{ position: "relative" }}>
+                  <label className="label">Email</label>
+                  <input
+                    className="input"
+                    disabled={!isEditing}
+                    value={profileData.email}
+                    onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                    placeholder="Email..."
+                    maxLength={100}
+                  />
+                  <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: profileData.email.length >= 100 ? "red" : "#999" }}>{profileData.email.length}/100</span>
+                </div>
+                <div style={{ position: "relative" }}>
+                  <label className="label">Phone</label>
+                  <input
+                    className="input"
+                    disabled={!isEditing}
+                    value={profileData.phone}
+                    onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                    placeholder="Phone..."
+                    maxLength={20}
+                  />
+                  <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: profileData.phone.length >= 20 ? "red" : "#999" }}>{profileData.phone.length}/20</span>
+                </div>
+              </div>
+
+              <div style={{ position: "relative" }}>
+                <label className="label">Address</label>
+                <input
+                  className="input"
+                  disabled={!isEditing}
+                  value={profileData.address_line}
+                  onChange={(e) => setProfileData({ ...profileData, address_line: e.target.value })}
+                  placeholder="Address..."
+                  maxLength={250}
+                />
+                <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: profileData.address_line.length >= 250 ? "red" : "#999" }}>{profileData.address_line.length}/250</span>
+              </div>
+
+              <div className="grid-2">
+                <div style={{ position: "relative" }}>
+                  <label className="label">City</label>
+                  <input
+                    className="input"
+                    disabled={!isEditing}
+                    value={profileData.city}
+                    onChange={(e) => setProfileData({ ...profileData, city: e.target.value })}
+                    placeholder="City..."
+                    maxLength={100}
+                  />
+                  <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: profileData.city.length >= 100 ? "red" : "#999" }}>{profileData.city.length}/100</span>
+                </div>
+                <div style={{ position: "relative" }}>
+                  <label className="label">Country</label>
+                  <input
+                    className="input"
+                    disabled={!isEditing}
+                    value={profileData.country}
+                    onChange={(e) => setProfileData({ ...profileData, country: e.target.value })}
+                    placeholder="Country..."
+                    maxLength={100}
+                  />
+                  <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: profileData.country.length >= 100 ? "red" : "#999" }}>{profileData.country.length}/100</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-16 flex gap-12">
+              {!isEditing ? (
+                <button type="button" className="btn" onClick={() => setIsEditing(true)}>
+                  Edit Profile
+                </button>
+              ) : (
+                <>
+                  <button type="button" className="btn" onClick={handleUpdateProfile} disabled={loading}>
+                    {loading ? "Saving..." : "Save Changes"}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-outline"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setProfileData({
+                        full_name: customerProfile?.full_name || authUser?.full_name || "",
+                        email: customerProfile?.email || authUser?.email || "",
+                        phone: customerProfile?.phone || authUser?.phone || "",
+                        address_line: customerProfile?.address_line || "",
+                        city: customerProfile?.city || "",
+                        country: customerProfile?.country || "",
+                      });
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
-
-        {message && <div style={{ color: "green", marginBottom: "15px", fontWeight: "bold" }}>{message}</div>}
-        {error && <div style={{ color: "red", marginBottom: "15px", fontWeight: "bold" }}>{error}</div>}
-
-        <div className="form-grid">
-          <div className="cx-admin-profile-hero">
-            <div className="cx-admin-profile-avatar-large">
-              {authUser?.full_name?.charAt(0)?.toUpperCase() || "C"}
-            </div>
-            <div>
-              <div className="cx-admin-profile-name">{authUser?.full_name || "Customer"}</div>
-              <div className="cx-admin-profile-role">CUSTOMER</div>
-            </div>
+      ) : (
+        <div className="cx-admin-panel animate-fade-in">
+          <div className="cx-admin-panel-header">
+            <h3>Security & Password</h3>
+            <p className="cx-admin-profile-subtitle">Update your account security</p>
           </div>
 
-          <div className="grid-1" style={{ gap: "12px" }}>
-            <div className="grid-2">
+          <div className="form-grid">
+            <div className="grid-1" style={{ gap: "15px" }}>
               <div>
-                <label className="label">Full Name</label>
+                <label className="label">Current Password</label>
                 <input
+                  type="password"
                   className="input"
-                  disabled={!isEditing}
-                  value={profileData.full_name}
-                  onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
+                  value={passData.current_password}
+                  onChange={(e) => setPassData({ ...passData, current_password: e.target.value })}
+                />
+              </div>
+              <div className="separator" style={{ margin: "5px 0" }} />
+              <div>
+                <label className="label">New Password</label>
+                <input
+                  type="password"
+                  className="input"
+                  value={passData.new_password}
+                  onChange={(e) => setPassData({ ...passData, new_password: e.target.value })}
                 />
               </div>
               <div>
-                <label className="label">Username</label>
-                <input className="input" disabled value={authUser?.username} />
-              </div>
-            </div>
-
-            <div className="grid-2">
-              <div>
-                <label className="label">Email</label>
+                <label className="label">Confirm Password</label>
                 <input
+                  type="password"
                   className="input"
-                  disabled={!isEditing}
-                  value={profileData.email}
-                  onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="label">Phone</label>
-                <input
-                  className="input"
-                  disabled={!isEditing}
-                  value={profileData.phone}
-                  onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                  value={passData.new_password_confirmation}
+                  onChange={(e) => setPassData({ ...passData, new_password_confirmation: e.target.value })}
                 />
               </div>
             </div>
 
-            <div>
-              <label className="label">Address</label>
-              <input
-                className="input"
-                disabled={!isEditing}
-                value={profileData.address_line}
-                onChange={(e) => setProfileData({ ...profileData, address_line: e.target.value })}
-              />
-            </div>
-
-            <div className="grid-2">
-              <div>
-                <label className="label">City</label>
-                <input
-                  className="input"
-                  disabled={!isEditing}
-                  value={profileData.city}
-                  onChange={(e) => setProfileData({ ...profileData, city: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="label">Country</label>
-                <input
-                  className="input"
-                  disabled={!isEditing}
-                  value={profileData.country}
-                  onChange={(e) => setProfileData({ ...profileData, country: e.target.value })}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-16 flex gap-12">
-            {!isEditing ? (
-              <button type="button" className="btn" onClick={() => setIsEditing(true)}>
-                Edit Profile
+            <div className="mt-16">
+              <button type="button" className="btn" onClick={handleChangePassword} disabled={loading}>
+                {loading ? "Updating..." : "Update Password"}
               </button>
-            ) : (
-              <>
-                <button type="button" className="btn" onClick={handleUpdateProfile} disabled={loading}>
-                  {loading ? "Saving..." : "Save Changes"}
-                </button>
-                <button
-                  type="button"
-                  className="btn-outline"
-                  onClick={() => {
-                    setIsEditing(false);
-                    setProfileData({
-                      full_name: customerProfile?.full_name || authUser?.full_name || "",
-                      email: customerProfile?.email || authUser?.email || "",
-                      phone: customerProfile?.phone || authUser?.phone || "",
-                      address_line: customerProfile?.address_line || "",
-                      city: customerProfile?.city || "",
-                      country: customerProfile?.country || "",
-                    });
-                  }}
-                >
-                  Cancel
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="cx-admin-panel">
-        <div className="cx-admin-panel-header">
-          <h3>Security</h3>
-          <p className="cx-admin-profile-subtitle">Update your password</p>
-        </div>
-
-        <div className="form-grid">
-          <div className="grid-1" style={{ gap: "15px" }}>
-            <div>
-              <label className="label">Current Password</label>
-              <input
-                type="password"
-                className="input"
-                value={passData.current_password}
-                onChange={(e) => setPassData({ ...passData, current_password: e.target.value })}
-              />
-            </div>
-            <div className="separator" style={{ margin: "5px 0" }} />
-            <div>
-              <label className="label">New Password</label>
-              <input
-                type="password"
-                className="input"
-                value={passData.new_password}
-                onChange={(e) => setPassData({ ...passData, new_password: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="label">Confirm Password</label>
-              <input
-                type="password"
-                className="input"
-                value={passData.new_password_confirmation}
-                onChange={(e) => setPassData({ ...passData, new_password_confirmation: e.target.value })}
-              />
             </div>
           </div>
-
-          <div className="mt-16">
-            <button type="button" className="btn" onClick={handleChangePassword} disabled={loading}>
-              {loading ? "Updating..." : "Update Password"}
-            </button>
-          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -36,7 +36,7 @@ class CustomerController extends Controller
             'full_name' => 'required|string|max:100',
             'email' => 'required|email|max:100',
             'phone' => 'required|string|max:20|unique:customers,phone',
-            'address_line' => 'required|string|max:255',
+            'address_line' => 'required|string|max:250',
             'city' => 'required|string|max:100',
             'country' => 'required|string|max:100',
         ], [
@@ -93,7 +93,7 @@ class CustomerController extends Controller
                 'max:20',
                 Rule::unique('customers', 'phone')->ignore($customer->customer_id, 'customer_id'),
             ],
-            'address_line' => 'required|string|max:255',
+            'address_line' => 'required|string|max:250',
             'city' => 'required|string|max:100',
             'country' => 'required|string|max:100',
         ], [

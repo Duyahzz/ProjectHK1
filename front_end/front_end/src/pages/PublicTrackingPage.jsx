@@ -29,7 +29,26 @@ export default function PublicTrackingPage() {
       <div className="card">
         <div className="card-body">
           <div className="toolbar">
-            <input className="input" style={{ maxWidth: 420 }} value={tracking} onChange={(e) => setTracking(e.target.value)} placeholder="Enter tracking number" />
+            <div style={{ position: "relative", maxWidth: 420, width: "100%" }}>
+              <input 
+                className="input" 
+                style={{ width: "100%", paddingRight: "60px" }} 
+                value={tracking} 
+                onChange={(e) => setTracking(e.target.value)} 
+                placeholder="Tracking number..." 
+                maxLength={20} 
+              />
+              <span style={{ 
+                position: "absolute", 
+                right: "12px", 
+                top: "50%", 
+                transform: "translateY(-50%)", 
+                fontSize: "12px", 
+                color: tracking.length >= 20 ? "red" : "#999" 
+              }}>
+                {tracking.length}/20
+              </span>
+            </div>
             <button className="btn" onClick={handleTrack}>{loading ? "Tracking..." : "Track"}</button>
           </div>
 

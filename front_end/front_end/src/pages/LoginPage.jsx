@@ -260,7 +260,7 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                 </div>
 
                 <div className="auth-form-grid">
-                  <div>
+                  <div style={{ position: "relative" }}>
                     <label className="label">Username or Email</label>
                     <input
                       className={`input ${getFieldError("login") ? "input-error" : ""}`}
@@ -269,8 +269,10 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                         setLoginForm((prev) => ({ ...prev, login: e.target.value }));
                         setFieldErrors((prev) => ({ ...prev, login: "" }));
                       }}
-                      placeholder="Enter username or email"
+                      placeholder="Username or Email..."
+                      maxLength={100}
                     />
+                    <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: loginForm.login.length >= 100 ? "red" : "#999" }}>{loginForm.login.length}/100</span>
                     {getFieldError("login") ? (
                       <div className="field-error">{getFieldError("login")}</div>
                     ) : null}
@@ -323,7 +325,7 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                 </div>
 
                 <div className="auth-form-grid">
-                  <div>
+                  <div style={{ position: "relative" }}>
                     <label className="label">Full Name</label>
                     <input
                       className={`input ${getFieldError("full_name") ? "input-error" : ""}`}
@@ -332,14 +334,16 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                         setRegisterForm((prev) => ({ ...prev, full_name: e.target.value }));
                         setFieldErrors((prev) => ({ ...prev, full_name: "" }));
                       }}
-                      placeholder="Enter full name"
+                      placeholder="Full name..."
+                      maxLength={100}
                     />
+                    <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: registerForm.full_name.length >= 100 ? "red" : "#999" }}>{registerForm.full_name.length}/100</span>
                     {getFieldError("full_name") ? (
                       <div className="field-error">{getFieldError("full_name")}</div>
                     ) : null}
                   </div>
 
-                  <div>
+                  <div style={{ position: "relative" }}>
                     <label className="label">Username</label>
                     <input
                       className={`input ${getFieldError("username") ? "input-error" : ""}`}
@@ -348,14 +352,16 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                         setRegisterForm((prev) => ({ ...prev, username: e.target.value }));
                         setFieldErrors((prev) => ({ ...prev, username: "" }));
                       }}
-                      placeholder="Enter username"
+                      placeholder="Username..."
+                      maxLength={100}
                     />
+                    <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: registerForm.username.length >= 100 ? "red" : "#999" }}>{registerForm.username.length}/100</span>
                     {getFieldError("username") ? (
                       <div className="field-error">{getFieldError("username")}</div>
                     ) : null}
                   </div>
 
-                  <div>
+                  <div style={{ position: "relative" }}>
                     <label className="label">Email</label>
                     <input
                       className={`input ${getFieldError("email") ? "input-error" : ""}`}
@@ -364,14 +370,16 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                         setRegisterForm((prev) => ({ ...prev, email: e.target.value }));
                         setFieldErrors((prev) => ({ ...prev, email: "" }));
                       }}
-                      placeholder="Enter email"
+                      placeholder="Email..."
+                      maxLength={100}
                     />
+                    <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: registerForm.email.length >= 100 ? "red" : "#999" }}>{registerForm.email.length}/100</span>
                     {getFieldError("email") ? (
                       <div className="field-error">{getFieldError("email")}</div>
                     ) : null}
                   </div>
 
-                  <div>
+                  <div style={{ position: "relative" }}>
                     <label className="label">Phone</label>
                     <input
                       className={`input ${getFieldError("phone") ? "input-error" : ""}`}
@@ -380,30 +388,36 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                         setRegisterForm((prev) => ({ ...prev, phone: e.target.value }));
                         setFieldErrors((prev) => ({ ...prev, phone: "" }));
                       }}
-                      placeholder="Enter phone number"
+                      placeholder="Phone number..."
+                      maxLength={20}
                     />
+                    <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: registerForm.phone.length >= 20 ? "red" : "#999" }}>{registerForm.phone.length}/20</span>
                     {getFieldError("phone") ? (
                       <div className="field-error">{getFieldError("phone")}</div>
                     ) : null}
                   </div>
 
                   <div className="auth-col-span-2">
-                    <label className="label">Address</label>
-                    <input
-                      className={`input ${getFieldError("address_line") ? "input-error" : ""}`}
-                      value={registerForm.address_line}
-                      onChange={(e) => {
-                        setRegisterForm((prev) => ({ ...prev, address_line: e.target.value }));
-                        setFieldErrors((prev) => ({ ...prev, address_line: "" }));
-                      }}
-                      placeholder="Enter address"
-                    />
-                    {getFieldError("address_line") ? (
-                      <div className="field-error">{getFieldError("address_line")}</div>
-                    ) : null}
+                    <div style={{ position: "relative" }}>
+                      <label className="label">Address</label>
+                      <input
+                        className={`input ${getFieldError("address_line") ? "input-error" : ""}`}
+                        value={registerForm.address_line}
+                        onChange={(e) => {
+                          setRegisterForm((prev) => ({ ...prev, address_line: e.target.value }));
+                          setFieldErrors((prev) => ({ ...prev, address_line: "" }));
+                        }}
+                        placeholder="Address..."
+                        maxLength={250}
+                      />
+                      <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: registerForm.address_line.length >= 250 ? "red" : "#999" }}>{registerForm.address_line.length}/250</span>
+                      {getFieldError("address_line") ? (
+                        <div className="field-error">{getFieldError("address_line")}</div>
+                      ) : null}
+                    </div>
                   </div>
 
-                  <div>
+                  <div style={{ position: "relative" }}>
                     <label className="label">City</label>
                     <input
                       className={`input ${getFieldError("city") ? "input-error" : ""}`}
@@ -412,14 +426,16 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                         setRegisterForm((prev) => ({ ...prev, city: e.target.value }));
                         setFieldErrors((prev) => ({ ...prev, city: "" }));
                       }}
-                      placeholder="Enter city"
+                      placeholder="City..."
+                      maxLength={100}
                     />
+                    <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: registerForm.city.length >= 100 ? "red" : "#999" }}>{registerForm.city.length}/100</span>
                     {getFieldError("city") ? (
                       <div className="field-error">{getFieldError("city")}</div>
                     ) : null}
                   </div>
 
-                  <div>
+                  <div style={{ position: "relative" }}>
                     <label className="label">Country</label>
                     <input
                       className={`input ${getFieldError("country") ? "input-error" : ""}`}
@@ -428,8 +444,10 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                         setRegisterForm((prev) => ({ ...prev, country: e.target.value }));
                         setFieldErrors((prev) => ({ ...prev, country: "" }));
                       }}
-                      placeholder="Enter country"
+                      placeholder="Country..."
+                      maxLength={100}
                     />
+                    <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: registerForm.country.length >= 100 ? "red" : "#999" }}>{registerForm.country.length}/100</span>
                     {getFieldError("country") ? (
                       <div className="field-error">{getFieldError("country")}</div>
                     ) : null}
@@ -499,7 +517,7 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                 </div>
 
                 <div className="auth-form-grid">
-                  <div>
+                  <div style={{ position: "relative" }}>
                     <label className="label">Username</label>
                     <input
                       className={`input ${getFieldError("username") ? "input-error" : ""}`}
@@ -508,14 +526,16 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                         setForgotForm((prev) => ({ ...prev, username: e.target.value }));
                         setFieldErrors((prev) => ({ ...prev, username: "" }));
                       }}
-                      placeholder="Enter username"
+                      placeholder="Username..."
+                      maxLength={100}
                     />
+                    <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: forgotForm.username.length >= 100 ? "red" : "#999" }}>{forgotForm.username.length}/100</span>
                     {getFieldError("username") ? (
                       <div className="field-error">{getFieldError("username")}</div>
                     ) : null}
                   </div>
 
-                  <div>
+                  <div style={{ position: "relative" }}>
                     <label className="label">Phone Number</label>
                     <input
                       className={`input ${getFieldError("phone") ? "input-error" : ""}`}
@@ -524,8 +544,10 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                         setForgotForm((prev) => ({ ...prev, phone: e.target.value }));
                         setFieldErrors((prev) => ({ ...prev, phone: "" }));
                       }}
-                      placeholder="Enter phone number"
+                      placeholder="Phone number..."
+                      maxLength={20}
                     />
+                    <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: forgotForm.phone.length >= 20 ? "red" : "#999" }}>{forgotForm.phone.length}/20</span>
                     {getFieldError("phone") ? (
                       <div className="field-error">{getFieldError("phone")}</div>
                     ) : null}

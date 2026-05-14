@@ -56,13 +56,13 @@ class ShipmentController extends Controller
             // Thông tin người gửi
             'sender_name' => 'required|string|max:100',
             'sender_phone' => 'required|string|max:20',
-            'sender_address' => 'required|string|max:255',
+            'sender_address' => 'required|string|max:250',
             'sender_city' => 'nullable|string|max:100',
             
             // Thông tin người nhận
             'receiver_name' => 'required|string|max:100',
             'receiver_phone' => 'required|string|max:20',
-            'receiver_address' => 'required|string|max:255',
+            'receiver_address' => 'required|string|max:250',
             'receiver_city' => 'nullable|string|max:100',
 
             // Thông tin đơn hàng
@@ -71,7 +71,7 @@ class ShipmentController extends Controller
             'assigned_agent_id' => 'nullable|integer|exists:users,user_id',
             'weight' => 'required|numeric|min:0.01',
             'total_charge' => 'required|numeric|min:0',
-            'parcel_name' => 'nullable|string|max:150',
+            'parcel_name' => 'nullable|string|max:100',
             'item_description' => 'nullable|string',
             'current_status' => 'nullable|string|max:50',
             'expected_delivery_date' => 'required|date|after_or_equal:today',

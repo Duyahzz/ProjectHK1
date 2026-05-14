@@ -412,7 +412,7 @@ function ShipmentsView({ refreshKey, authUser, onDataChanged }) {
               </select>
             </div>
 
-            <div>
+            <div style={{ position: "relative" }}>
               <label className="label">Note</label>
               <input
                 className="input"
@@ -423,8 +423,10 @@ function ShipmentsView({ refreshKey, authUser, onDataChanged }) {
                     status_note: e.target.value,
                   }))
                 }
-                placeholder="Enter status note"
+                placeholder="Enter status note..."
+                maxLength={250}
               />
+              <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: statusForm.status_note.length >= 250 ? "red" : "#999" }}>{statusForm.status_note.length}/250</span>
             </div>
           </div>
 
@@ -656,7 +658,7 @@ function CustomersView({ refreshKey, onDataChanged }) {
         </div>
 
         <div className="grid-2">
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Full Name</label>
             <input
               className={`input ${getFieldError("full_name") ? "input-error" : ""}`}
@@ -665,13 +667,16 @@ function CustomersView({ refreshKey, onDataChanged }) {
                 setForm((prev) => ({ ...prev, full_name: e.target.value }));
                 clearFieldError("full_name");
               }}
+              placeholder="Full name..."
+              maxLength={100}
             />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.full_name.length >= 100 ? "red" : "#999" }}>{form.full_name.length}/100</span>
             {getFieldError("full_name") ? (
               <div className="field-error">{getFieldError("full_name")}</div>
             ) : null}
           </div>
 
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Email</label>
             <input
               className={`input ${getFieldError("email") ? "input-error" : ""}`}
@@ -680,13 +685,16 @@ function CustomersView({ refreshKey, onDataChanged }) {
                 setForm((prev) => ({ ...prev, email: e.target.value }));
                 clearFieldError("email");
               }}
+              placeholder="Email..."
+              maxLength={100}
             />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.email.length >= 100 ? "red" : "#999" }}>{form.email.length}/100</span>
             {getFieldError("email") ? (
               <div className="field-error">{getFieldError("email")}</div>
             ) : null}
           </div>
 
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Phone</label>
             <input
               className={`input ${getFieldError("phone") ? "input-error" : ""}`}
@@ -695,13 +703,16 @@ function CustomersView({ refreshKey, onDataChanged }) {
                 setForm((prev) => ({ ...prev, phone: e.target.value }));
                 clearFieldError("phone");
               }}
+              placeholder="Phone..."
+              maxLength={20}
             />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.phone.length >= 20 ? "red" : "#999" }}>{form.phone.length}/20</span>
             {getFieldError("phone") ? (
               <div className="field-error">{getFieldError("phone")}</div>
             ) : null}
           </div>
 
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Address</label>
             <input
               className={`input ${getFieldError("address_line") ? "input-error" : ""}`}
@@ -710,13 +721,16 @@ function CustomersView({ refreshKey, onDataChanged }) {
                 setForm((prev) => ({ ...prev, address_line: e.target.value }));
                 clearFieldError("address_line");
               }}
+              placeholder="Address..."
+              maxLength={250}
             />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.address_line.length >= 250 ? "red" : "#999" }}>{form.address_line.length}/250</span>
             {getFieldError("address_line") ? (
               <div className="field-error">{getFieldError("address_line")}</div>
             ) : null}
           </div>
 
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">City</label>
             <input
               className={`input ${getFieldError("city") ? "input-error" : ""}`}
@@ -725,13 +739,16 @@ function CustomersView({ refreshKey, onDataChanged }) {
                 setForm((prev) => ({ ...prev, city: e.target.value }));
                 clearFieldError("city");
               }}
+              placeholder="City..."
+              maxLength={100}
             />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.city.length >= 100 ? "red" : "#999" }}>{form.city.length}/100</span>
             {getFieldError("city") ? (
               <div className="field-error">{getFieldError("city")}</div>
             ) : null}
           </div>
 
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Country</label>
             <input
               className={`input ${getFieldError("country") ? "input-error" : ""}`}
@@ -740,7 +757,10 @@ function CustomersView({ refreshKey, onDataChanged }) {
                 setForm((prev) => ({ ...prev, country: e.target.value }));
                 clearFieldError("country");
               }}
+              placeholder="Country..."
+              maxLength={100}
             />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.country.length >= 100 ? "red" : "#999" }}>{form.country.length}/100</span>
             {getFieldError("country") ? (
               <div className="field-error">{getFieldError("country")}</div>
             ) : null}
@@ -907,7 +927,7 @@ function BranchesView({ refreshKey, onDataChanged }) {
         </div>
 
         <div className="grid-2">
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Branch Code</label>
             <input
               className={`input ${getFieldError("branch_code") ? "input-error" : ""}`}
@@ -916,13 +936,16 @@ function BranchesView({ refreshKey, onDataChanged }) {
                 setForm((prev) => ({ ...prev, branch_code: e.target.value }));
                 clearFieldError("branch_code");
               }}
+              placeholder="Branch code..."
+              maxLength={20}
             />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.branch_code.length >= 20 ? "red" : "#999" }}>{form.branch_code.length}/20</span>
             {getFieldError("branch_code") ? (
               <div className="field-error">{getFieldError("branch_code")}</div>
             ) : null}
           </div>
 
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Branch Name</label>
             <input
               className={`input ${getFieldError("branch_name") ? "input-error" : ""}`}
@@ -931,13 +954,16 @@ function BranchesView({ refreshKey, onDataChanged }) {
                 setForm((prev) => ({ ...prev, branch_name: e.target.value }));
                 clearFieldError("branch_name");
               }}
+              placeholder="Branch name..."
+              maxLength={100}
             />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.branch_name.length >= 100 ? "red" : "#999" }}>{form.branch_name.length}/100</span>
             {getFieldError("branch_name") ? (
               <div className="field-error">{getFieldError("branch_name")}</div>
             ) : null}
           </div>
 
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">City</label>
             <input
               className={`input ${getFieldError("city") ? "input-error" : ""}`}
@@ -946,13 +972,16 @@ function BranchesView({ refreshKey, onDataChanged }) {
                 setForm((prev) => ({ ...prev, city: e.target.value }));
                 clearFieldError("city");
               }}
+              placeholder="City..."
+              maxLength={100}
             />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.city.length >= 100 ? "red" : "#999" }}>{form.city.length}/100</span>
             {getFieldError("city") ? (
               <div className="field-error">{getFieldError("city")}</div>
             ) : null}
           </div>
 
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Phone</label>
             <input
               className={`input ${getFieldError("phone") ? "input-error" : ""}`}
@@ -961,13 +990,16 @@ function BranchesView({ refreshKey, onDataChanged }) {
                 setForm((prev) => ({ ...prev, phone: e.target.value }));
                 clearFieldError("phone");
               }}
+              placeholder="Phone..."
+              maxLength={20}
             />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.phone.length >= 20 ? "red" : "#999" }}>{form.phone.length}/20</span>
             {getFieldError("phone") ? (
               <div className="field-error">{getFieldError("phone")}</div>
             ) : null}
           </div>
 
-          <div>
+          <div style={{ position: "relative" }}>
             <label className="label">Email</label>
             <input
               className={`input ${getFieldError("email") ? "input-error" : ""}`}
@@ -976,7 +1008,10 @@ function BranchesView({ refreshKey, onDataChanged }) {
                 setForm((prev) => ({ ...prev, email: e.target.value }));
                 clearFieldError("email");
               }}
+              placeholder="Email..."
+              maxLength={100}
             />
+            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.email.length >= 100 ? "red" : "#999" }}>{form.email.length}/100</span>
             {getFieldError("email") ? (
               <div className="field-error">{getFieldError("email")}</div>
             ) : null}
