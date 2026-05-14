@@ -1106,8 +1106,13 @@ export default function AgentDashboard({ onLogout }) {
     revenue: 0
   });
   const [bills, setBills] = useState([]);
-  const [branches, setBranches] = useState([]); // Added to store branch list
+  const [branches, setBranches] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  const [dateRange, setDateRange] = useState({
+    start: new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split('T')[0],
+    end: new Date().toISOString().split('T')[0]
+  });
 
   const currentBranch = branches.find(b => b.branch_id === authUser?.branch_id);
 
