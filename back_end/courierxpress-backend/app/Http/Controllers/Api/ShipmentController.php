@@ -153,6 +153,13 @@ class ShipmentController extends Controller
     {
         $shipment = Shipment::findOrFail($id);
 
+        if ($shipment->current_status === 'DELIVERED') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot edit a shipment that has already been delivered.'
+            ], 422);
+        }
+
         $request->validate([
             'sender_name' => 'required|string|max:100',
             'sender_phone' =>'required|string',

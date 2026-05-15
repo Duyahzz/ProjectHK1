@@ -275,8 +275,15 @@ function BookingsView({ shipments, onPageChange, onEditShipment, onUpdateStatus 
                     <div className="flex gap-12">
                       <button
                         className="btn-outline"
-                        style={{ padding: "4px 8px", fontSize: "12px" }}
-                        onClick={() => onEditShipment(item)}
+                        style={{ 
+                          padding: "4px 8px", 
+                          fontSize: "12px",
+                          opacity: item.current_status === "DELIVERED" ? 0.5 : 1,
+                          cursor: item.current_status === "DELIVERED" ? "not-allowed" : "pointer"
+                        }}
+                        onClick={() => item.current_status !== "DELIVERED" && onEditShipment(item)}
+                        disabled={item.current_status === "DELIVERED"}
+                        title={item.current_status === "DELIVERED" ? "Cannot edit delivered shipment" : ""}
                       >
                         Edit
                       </button>
