@@ -1016,17 +1016,19 @@ function AgentsView({ refreshKey, onDataChanged }) {
             </div>
           )}
           
-          <div style={{ position: "relative" }}>
-            <label className="label">{editingAgent ? "New Password (Optional)" : "Password"}</label>
-            <input
-              type="password"
-              className={`input ${getFieldError("password") ? "input-error" : ""}`}
-              value={form.password}
-              onChange={(e) => { setForm({ ...form, password: e.target.value }); clearFieldError("password"); }}
-              placeholder="Minimum 6 characters..."
-            />
-            {getFieldError("password") && <div className="field-error">{getFieldError("password")}</div>}
-          </div>
+          {!editingAgent && (
+            <div style={{ position: "relative" }}>
+              <label className="label">Password</label>
+              <input
+                type="password"
+                className={`input ${getFieldError("password") ? "input-error" : ""}`}
+                value={form.password}
+                onChange={(e) => { setForm({ ...form, password: e.target.value }); clearFieldError("password"); }}
+                placeholder="Minimum 6 characters..."
+              />
+              {getFieldError("password") && <div className="field-error">{getFieldError("password")}</div>}
+            </div>
+          )}
 
           <div style={{ position: "relative" }}>
             <label className="label">Full Name</label>
