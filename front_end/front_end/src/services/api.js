@@ -138,6 +138,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  updateShipment: (id, payload) =>
+    request(`/shipments/${id}`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 };
 
 export default API_URL;

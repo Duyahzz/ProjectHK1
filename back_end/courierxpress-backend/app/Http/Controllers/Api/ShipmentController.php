@@ -149,6 +149,86 @@ class ShipmentController extends Controller
         );
     }
 
+    public function update(Request $request, $id)
+    {
+        $shipment = Shipment::findOrFail($id);
+
+        $request->validate([
+            'sender_name' => 'required|string|max:100',
+            'sender_phone' =>'required|string',
+            'sender_address' => 'required|string|max:250',
+            'sender_city' => 'nullable|string|max:100',
+            'receiver_name' => 'required|string|max:100',
+            'receiver_phone' => 'required|string',
+            'receiver_address' => 'required|string|max:250',
+            'receiver_city' => 'nullable|string|max:100',
+            'shipment_type_id' => 'required',
+            'weight' => 'required',
+            'total_charge' => 'required',
+            'parcel_name' => 'nullable|string|max:100',
+            'item_description' => 'nullable|string',
+            'expected_delivery_date' => 'nullable',
+            'notes' => 'nullable|string',
+            'current_status' => 'nullable|string',
+        ]);
+
+        // Update Sender Customer
+        $sender = Customer::updateOrCreate(
+            ['phone' => $request->sender_phone],
+            [
+                'full_name' => $request->sender_name,
+                'address_line' => $request->sender_address,
+                'city' => $request->sender_city,
+                'customer_code' => Customer::where('phone', $request->sender_phone)->first()->customer_code ?? 'CUS' . time() . 'S',
+                'country' => 'Vietnam',
+            ]
+        );
+
+        // Update Receiver Customer
+        $receiver = Customer::updateOrCreate(
+            ['phone' => $request->receiver_phone],
+            [
+                'full_name' => $request->receiver_name,
+                'address_line' => $request->receiver_address,
+                'city' => $request->receiver_city,
+                'customer_code' => Customer::where('phone', $request->receiver_phone)->first()->customer_code ?? 'CUS' . time() . 'R',
+                'country' => 'Vietnam',
+            ]
+        );
+
+        // Direct DB update for Shipment to be 100% sure
+        DB::table('shipments')
+            ->where('shipment_id', $id)
+            ->update([
+                'sender_customer_id' => $sender->customer_id,
+                'receiver_customer_id' => $receiver->customer_id,
+                'shipment_type_id' => $request->shipment_type_id,
+                'weight' => $request->weight,
+                'total_charge' => $request->total_charge,
+                'parcel_name' => $request->parcel_name,
+                'item_description' => $request->item_description,
+                'notes' => $request->notes,
+                'expected_delivery_date' => $request->expected_delivery_date,
+                'current_status' => $request->current_status ?? $shipment->current_status,
+            ]);
+
+        if ($request->filled('current_status') && $shipment->current_status !== $request->current_status) {
+            // Log status change
+            DB::table('shipment_status_history')->insert([
+                'shipment_id' => $id,
+                'status' => $request->current_status,
+                'status_note' => 'Status updated via shipment edit',
+                'updated_by_user_id' => 1,
+                'event_time' => now(),
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Shipment updated successfully',
+            'shipment' => Shipment::with(['sender', 'receiver', 'shipmentType', 'branch', 'agent', 'bill'])->find($id)
+        ]);
+    }
+
     public function updateStatus(Request $request, Shipment $shipment)
     {
         $data = $request->validate([
@@ -158,6 +238,13 @@ class ShipmentController extends Controller
         ]);
 
         try {
+            if ($shipment->current_status === 'DELIVERED') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot change status of a delivered shipment.'
+                ], 422);
+            }
+
             $shipment->current_status = $data['status'];
             $shipment->save();
 

@@ -38,21 +38,12 @@ export default function App() {
     return <LoginPage onLogin={handleLogin} />;
   }
 
-  if (currentScreen === "admin") {
-    return <AdminDashboard onLogout={handleLogout} />;
-  }
+  let content;
+  if (currentScreen === "admin") content = <AdminDashboard onLogout={handleLogout} />;
+  else if (currentScreen === "agent") content = <AgentDashboard onLogout={handleLogout} />;
+  else if (currentScreen === "customer") content = <CustomerDashboard onLogout={handleLogout} />;
+  else if (currentScreen === "public-track") content = <PublicTrackingPage />;
+  else content = <LoginPage onLogin={handleLogin} />;
 
-  if (currentScreen === "agent") {
-    return <AgentDashboard onLogout={handleLogout} />;
-  }
-
-  if (currentScreen === "customer") {
-    return <CustomerDashboard onLogout={handleLogout} />;
-  }
-
-  if (currentScreen === "public-track") {
-    return <PublicTrackingPage />;
-  }
-
-  return <LoginPage onLogin={handleLogin} />;
+  return content;
 }

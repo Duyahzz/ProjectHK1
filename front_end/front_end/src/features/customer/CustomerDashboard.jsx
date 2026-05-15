@@ -367,8 +367,25 @@ function CustomerProfilePage({ authUser, customerProfile, onUpdateSuccess }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const validate = () => {
+    const errs = {};
+    if (!profileData.full_name) errs.full_name = "Full name is required.";
+    if (!profileData.email) errs.email = "Email is required.";
+    if (!profileData.phone) errs.phone = "Phone number is required.";
+    if (!profileData.address_line) errs.address_line = "Address is required.";
+    if (!profileData.city) errs.city = "City is required.";
+    if (!profileData.country) errs.country = "Country is required.";
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   const handleUpdateProfile = async () => {
+    if (!validate()) {
+      setError("Please check the highlighted fields.");
+      return;
+    }
     setLoading(true);
     setError("");
     setMessage("");
@@ -380,6 +397,7 @@ function CustomerProfilePage({ authUser, customerProfile, onUpdateSuccess }) {
       if (res.success) {
         setMessage("Profile updated successfully!");
         setIsEditing(false);
+        setFieldErrors({});
         if (onUpdateSuccess) onUpdateSuccess(res.user);
       }
     } catch (err) {
@@ -461,13 +479,17 @@ function CustomerProfilePage({ authUser, customerProfile, onUpdateSuccess }) {
                 <div style={{ position: "relative" }}>
                   <label className="label">Full Name</label>
                   <input
-                    className="input"
+                    className={`input ${fieldErrors.full_name ? "input-error" : ""}`}
                     disabled={!isEditing}
                     value={profileData.full_name}
-                    onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
+                    onChange={(e) => {
+                      setProfileData({ ...profileData, full_name: e.target.value });
+                      if (fieldErrors.full_name) setFieldErrors(prev => ({ ...prev, full_name: null }));
+                    }}
                     placeholder="Full Name..."
                     maxLength={100}
                   />
+                  {fieldErrors.full_name && <div className="field-error">{fieldErrors.full_name}</div>}
                 </div>
                 <div>
                   <label className="label">Username</label>
@@ -479,73 +501,108 @@ function CustomerProfilePage({ authUser, customerProfile, onUpdateSuccess }) {
                 <div style={{ position: "relative" }}>
                   <label className="label">Email</label>
                   <input
-                    className="input"
+                    className={`input ${fieldErrors.email ? "input-error" : ""}`}
                     disabled={!isEditing}
                     value={profileData.email}
-                    onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                    onChange={(e) => {
+                      setProfileData({ ...profileData, email: e.target.value });
+                      if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: null }));
+                    }}
                     placeholder="Email..."
                     maxLength={100}
                   />
+                  {fieldErrors.email && <div className="field-error">{fieldErrors.email}</div>}
                 </div>
                 <div style={{ position: "relative" }}>
                   <label className="label">Phone</label>
                   <input
-                    className="input"
+                    className={`input ${fieldErrors.phone ? "input-error" : ""}`}
                     disabled={!isEditing}
                     value={profileData.phone}
-                    onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                    onChange={(e) => {
+                      setProfileData({ ...profileData, phone: e.target.value.replace(/[^0-9]/g, "") });
+                      if (fieldErrors.phone) setFieldErrors(prev => ({ ...prev, phone: null }));
+                    }}
                     placeholder="Phone..."
                     maxLength={20}
                   />
+                  {fieldErrors.phone && <div className="field-error">{fieldErrors.phone}</div>}
                 </div>
               </div>
 
               <div style={{ position: "relative" }}>
                 <label className="label">Address</label>
                 <input
-                  className="input"
+                  className={`input ${fieldErrors.address_line ? "input-error" : ""}`}
                   disabled={!isEditing}
                   value={profileData.address_line}
-                  onChange={(e) => setProfileData({ ...profileData, address_line: e.target.value })}
+                  onChange={(e) => {
+                    setProfileData({ ...profileData, address_line: e.target.value });
+                    if (fieldErrors.address_line) setFieldErrors(prev => ({ ...prev, address_line: null }));
+                  }}
                   placeholder="Address..."
                   maxLength={250}
                 />
+                {fieldErrors.address_line && <div className="field-error">{fieldErrors.address_line}</div>}
               </div>
 
               <div className="grid-2">
                 <div style={{ position: "relative" }}>
                   <label className="label">City</label>
                   <input
-                    className="input"
+                    className={`input ${fieldErrors.city ? "input-error" : ""}`}
                     disabled={!isEditing}
                     value={profileData.city}
-                    onChange={(e) => setProfileData({ ...profileData, city: e.target.value })}
+                    onChange={(e) => {
+                      setProfileData({ ...profileData, city: e.target.value });
+                      if (fieldErrors.city) setFieldErrors(prev => ({ ...prev, city: null }));
+                    }}
                     placeholder="City..."
                     maxLength={100}
                   />
+                  {fieldErrors.city && <div className="field-error">{fieldErrors.city}</div>}
                 </div>
                 <div style={{ position: "relative" }}>
                   <label className="label">Country</label>
                   <input
-                    className="input"
+                    className={`input ${fieldErrors.country ? "input-error" : ""}`}
                     disabled={!isEditing}
                     value={profileData.country}
-                    onChange={(e) => setProfileData({ ...profileData, country: e.target.value })}
+                    onChange={(e) => {
+                      setProfileData({ ...profileData, country: e.target.value });
+                      if (fieldErrors.country) setFieldErrors(prev => ({ ...prev, country: null }));
+                    }}
                     placeholder="Country..."
                     maxLength={100}
                   />
+                  {fieldErrors.country && <div className="field-error">{fieldErrors.country}</div>}
                 </div>
               </div>
             </div>
 
             <div className="mt-16 flex gap-12">
               {!isEditing ? (
-                <button type="button" className="btn" onClick={() => setIsEditing(true)}>
+                <button 
+                  type="button" 
+                  className="btn" 
+                  onClick={() => {
+                    setIsEditing(true);
+                    setMessage("");
+                    setError("");
+                    setFieldErrors({});
+                  }}
+                >
                   Edit Profile
                 </button>
               ) : (
-                <>
-                  <button type="button" className="btn" onClick={handleUpdateProfile} disabled={loading}>
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleUpdateProfile();
+                  }} 
+                  style={{ width: "100%", display: "contents" }}
+                >
+                  <button type="submit" className="btn" disabled={loading}>
                     {loading ? "Saving..." : "Save Changes"}
                   </button>
                   <button
@@ -561,11 +618,12 @@ function CustomerProfilePage({ authUser, customerProfile, onUpdateSuccess }) {
                         city: customerProfile?.city || "",
                         country: customerProfile?.country || "",
                       });
+                      setFieldErrors({});
                     }}
                   >
                     Cancel
                   </button>
-                </>
+                </form>
               )}
             </div>
           </div>

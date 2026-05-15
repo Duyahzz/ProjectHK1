@@ -740,7 +740,7 @@ function CustomersView({ refreshKey, onDataChanged }) {
               className={`input ${getFieldError("phone") ? "input-error" : ""}`}
               value={form.phone}
               onChange={(e) => {
-                setForm((prev) => ({ ...prev, phone: e.target.value }));
+                setForm((prev) => ({ ...prev, phone: e.target.value.replace(/[^0-9]/g, "") }));
                 clearFieldError("phone");
               }}
               placeholder="Phone..."
@@ -1020,7 +1020,7 @@ function BranchesView({ refreshKey, onDataChanged }) {
               className={`input ${getFieldError("phone") ? "input-error" : ""}`}
               value={form.phone}
               onChange={(e) => {
-                setForm((prev) => ({ ...prev, phone: e.target.value }));
+                setForm((prev) => ({ ...prev, phone: e.target.value.replace(/[^0-9]/g, "") }));
                 clearFieldError("phone");
               }}
               placeholder="Phone..."

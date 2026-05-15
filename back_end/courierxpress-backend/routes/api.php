@@ -47,6 +47,7 @@ Route::get('/shipment-types', [ShipmentTypeController::class, 'index']);
 Route::get('/shipments', [ShipmentController::class, 'index']);
 Route::get('/shipments/{shipment}', [ShipmentController::class, 'show']);
 Route::post('/shipments', [ShipmentController::class, 'store']);
+Route::post('/shipments/{shipment}', [ShipmentController::class, 'update']);
 Route::post('/shipments/{shipment}/status', [ShipmentController::class, 'updateStatus']);
 Route::get('/tracking/{tracking}', [ShipmentController::class, 'trackByNumber']);
 

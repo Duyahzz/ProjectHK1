@@ -217,7 +217,7 @@ function DashboardView({ stats, setActiveTab, dateRange, setDateRange }) {
   );
 }
 
-function BookingsView({ shipments, onPageChange }) {
+function BookingsView({ shipments, onPageChange, onEditShipment, onUpdateStatus }) {
   const [query, setQuery] = useState("");
   const shipmentList = Array.isArray(shipments) ? shipments : (shipments.data || []);
 
@@ -256,6 +256,7 @@ function BookingsView({ shipments, onPageChange }) {
               <th>Status</th>
               <th>Expected</th>
               <th>Charge</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -270,6 +271,24 @@ function BookingsView({ shipments, onPageChange }) {
                   </td>
                   <td>{item.expected_delivery_date || "-"}</td>
                   <td>{formatCurrency(item.total_charge || 0)}</td>
+                  <td>
+                    <div className="flex gap-12">
+                      <button
+                        className="btn-outline"
+                        style={{ padding: "4px 8px", fontSize: "12px" }}
+                        onClick={() => onEditShipment(item)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn-outline"
+                        style={{ padding: "4px 8px", fontSize: "12px", borderColor: "#2563eb", color: "#2563eb" }}
+                        onClick={() => onUpdateStatus(item.tracking_number)}
+                      >
+                        Status
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))
             ) : (
@@ -309,7 +328,7 @@ function BookingsView({ shipments, onPageChange }) {
   );
 }
 
-function CreateShipmentView({ onShipmentCreated, authUser }) {
+function CreateShipmentView({ onShipmentCreated, authUser, editingShipment, onCancelEdit }) {
   const [customers, setCustomers] = useState([]);
   const [branches, setBranches] = useState([]);
   const [shipmentTypes, setShipmentTypes] = useState([]);
@@ -335,6 +354,7 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
     item_description: "",
     expected_delivery_date: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
     notes: "",
+    current_status: "BOOKED",
   });
 
   useEffect(() => {
@@ -343,7 +363,39 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
     api.getShipmentTypes().then(setShipmentTypes).catch(console.error);
   }, []);
 
+  useEffect(() => {
+    if (editingShipment) {
+      setFormData({
+        sender_name: editingShipment.sender?.full_name || "",
+        sender_phone: editingShipment.sender?.phone || "",
+        sender_address: editingShipment.sender?.address_line || "",
+        sender_city: editingShipment.sender?.city || "",
+        receiver_name: editingShipment.receiver?.full_name || "",
+        receiver_phone: editingShipment.receiver?.phone || "",
+        receiver_address: editingShipment.receiver?.address_line || "",
+        receiver_city: editingShipment.receiver?.city || "",
+        shipment_type_id: editingShipment.shipment_type_id || "",
+        origin_branch_id: editingShipment.origin_branch_id || "",
+        assigned_agent_id: editingShipment.assigned_agent_id || "",
+        weight: editingShipment.weight || "",
+        total_charge: editingShipment.total_charge || "",
+        parcel_name: editingShipment.parcel_name || "",
+        item_description: editingShipment.item_description || "",
+        expected_delivery_date: editingShipment.expected_delivery_date ? editingShipment.expected_delivery_date.slice(0, 16) : "",
+        notes: editingShipment.notes || "",
+        current_status: editingShipment.current_status || "BOOKED",
+      });
+    } else {
+      resetForm();
+    }
+  }, [editingShipment]);
+
   const handleChange = (field, value) => {
+    // Only allow digits for phone number fields
+    if (field === "sender_phone" || field === "receiver_phone") {
+      value = value.replace(/[^0-9]/g, "");
+    }
+
     setFormData((prev) => {
       let updatedFormData = { ...prev, [field]: value };
 
@@ -408,6 +460,7 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
       item_description: "",
       expected_delivery_date: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
       notes: "",
+      current_status: "BOOKED",
     });
     setCreateMessage("");
     setCreateError("");
@@ -420,6 +473,7 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
 
     try {
       setSubmitting(true);
+      alert("Processing: " + (editingShipment ? "Update Shipment ID " + editingShipment.shipment_id : "Create New Shipment"));
 
       const payload = {
         ...formData,
@@ -430,9 +484,14 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
         total_charge: Number(formData.total_charge),
       };
 
-      await api.createShipment(payload);
-
-      setCreateMessage("Create shipment successfully.");
+      if (editingShipment) {
+        await api.updateShipment(editingShipment.shipment_id, payload);
+        alert("Update shipment successfully!");
+        window.location.reload();
+      } else {
+        await api.createShipment(payload);
+        alert("Create shipment successfully!");
+      }
       resetForm();
 
       if (onShipmentCreated) {
@@ -440,7 +499,12 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
       }
     } catch (error) {
       console.error(error);
-      setCreateError("Create shipment failed. Please check your data.");
+      const errorMsg = error.validationErrors 
+        ? (Object.values(error.validationErrors)[0][0] || "Validation error")
+        : (error.message || "Operation failed");
+      
+      alert("Error: " + errorMsg);
+      setCreateError(errorMsg);
     } finally {
       setSubmitting(false);
     }
@@ -449,9 +513,9 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
   return (
     <div className="cx-admin-panel">
       <div className="cx-admin-panel-header">
-        <h3>Create Shipment Booking</h3>
+        <h3>{editingShipment ? "Edit Shipment Booking" : "Create Shipment Booking"}</h3>
         <p className="cx-admin-profile-subtitle">
-          Create a new shipment and save it to the real database.
+          {editingShipment ? "Modify existing shipment details." : "Create a new shipment and save it to the real database."}
         </p>
       </div>
 
@@ -511,6 +575,29 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
         <div style={{ gridColumn: "1 / -1", fontWeight: "bold", color: "#2563eb", borderBottom: "1px solid #ddd", paddingBottom: "5px", marginTop: "10px" }}>SHIPMENT DETAILS</div>
 
         <div className="grid-2">
+          <div>
+            <label className="label">Current Status</label>
+            <select
+              className="select"
+              value={formData.current_status}
+              onChange={(e) => handleChange("current_status", e.target.value)}
+              disabled={editingShipment?.current_status === "DELIVERED"}
+              required
+            >
+              <option>BOOKED</option>
+              <option>PICKED_UP</option>
+              <option>IN_TRANSIT</option>
+              <option>OUT_FOR_DELIVERY</option>
+              <option>DELIVERED</option>
+              <option>CANCELLED</option>
+            </select>
+            {editingShipment?.current_status === "DELIVERED" && (
+              <small style={{ color: "#e11d48", fontWeight: "600", marginTop: "4px", display: "block" }}>
+                Delivered shipment status is locked.
+              </small>
+            )}
+          </div>
+
           <div>
             <label className="label">Shipment Type</label>
             <select
@@ -639,6 +726,24 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
           />
         </div>
 
+        {editingShipment && (
+          <div>
+            <label className="label">Current Status</label>
+            <select
+              className="select"
+              value={formData.current_status}
+              onChange={(e) => handleChange("current_status", e.target.value)}
+            >
+              <option value="BOOKED">BOOKED</option>
+              <option value="PICKED_UP">PICKED_UP</option>
+              <option value="IN_TRANSIT">IN_TRANSIT</option>
+              <option value="OUT_FOR_DELIVERY">OUT_FOR_DELIVERY</option>
+              <option value="DELIVERED">DELIVERED</option>
+              <option value="CANCELLED">CANCELLED</option>
+            </select>
+          </div>
+        )}
+
         {createMessage ? (
           <div style={{ color: "green", fontWeight: 600 }}>{createMessage}</div>
         ) : null}
@@ -649,29 +754,45 @@ function CreateShipmentView({ onShipmentCreated, authUser }) {
 
         <div className="flex gap-12">
           <button type="submit" className="btn" disabled={submitting}>
-            {submitting ? "Creating..." : "Create Shipment"}
+            {submitting ? "Processing..." : (editingShipment ? "Update Shipment" : "Create Shipment")}
           </button>
 
-          <button type="button" className="btn-outline" onClick={resetForm} disabled={submitting}>
-            Reset
-          </button>
+          {editingShipment ? (
+            <button type="button" className="btn-outline" onClick={onCancelEdit} disabled={submitting}>
+              Cancel
+            </button>
+          ) : (
+            <button type="button" className="btn-outline" onClick={resetForm} disabled={submitting}>
+              Reset
+            </button>
+          )}
         </div>
       </form>
     </div>
   );
 }
 
-function StatusView({ authUser, onStatusUpdated }) {
-  const [tracking, setTracking] = useState("TRK002");
+function StatusView({ authUser, onStatusUpdated, prefilledTracking }) {
+  const [tracking, setTracking] = useState(prefilledTracking || "TRK");
   const [details, setDetails] = useState(null);
   const [status, setStatus] = useState("IN_TRANSIT");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const search = async () => {
+  useEffect(() => {
+    if (prefilledTracking) {
+      setTracking(prefilledTracking);
+      search(prefilledTracking);
+    }
+  }, [prefilledTracking]);
+
+  const search = async (forcedTracking = null) => {
+    const trk = forcedTracking || tracking;
+    if (!trk) return;
+
     setLoading(true);
     try {
-      const result = await api.trackShipment(tracking);
+      const result = await api.trackShipment(trk);
       setDetails(result);
       setStatus(result.current_status || "IN_TRANSIT");
     } catch (error) {
@@ -732,7 +853,12 @@ function StatusView({ authUser, onStatusUpdated }) {
           </div>
 
           <div className="grid-2">
-            <select className="select" value={status} onChange={(e) => setStatus(e.target.value)}>
+            <select 
+              className="select" 
+              value={status} 
+              onChange={(e) => setStatus(e.target.value)}
+              disabled={details?.current_status === "DELIVERED"}
+            >
               <option>BOOKED</option>
               <option>PICKED_UP</option>
               <option>IN_TRANSIT</option>
@@ -747,12 +873,19 @@ function StatusView({ authUser, onStatusUpdated }) {
               value={note}
               onChange={(e) => setNote(e.target.value)}
               maxLength={250}
+              disabled={details?.current_status === "DELIVERED"}
             />
           </div>
 
-          <button className="btn" style={{ width: "fit-content" }} onClick={save} disabled={!details}>
-            Save Update
-          </button>
+          {details?.current_status === "DELIVERED" ? (
+            <div style={{ color: "#e11d48", fontWeight: "600", padding: "10px", background: "#fff1f2", borderRadius: "12px", border: "1px solid #fda4af" }}>
+              This shipment has been delivered. Status cannot be modified.
+            </div>
+          ) : (
+            <button className="btn" style={{ width: "fit-content" }} onClick={save} disabled={!details}>
+              Save Update
+            </button>
+          )}
         </div>
       </div>
 
@@ -888,9 +1021,23 @@ function AgentProfilePage({ authUser, onUpdateSuccess }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const validate = () => {
+    const errs = {};
+    if (!profileData.full_name) errs.full_name = "Full name is required.";
+    if (!profileData.email) errs.email = "Email is required.";
+    if (!profileData.phone) errs.phone = "Phone number is required.";
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
+    if (!validate()) {
+      setError("Please check the highlighted fields.");
+      return;
+    }
     setLoading(true);
     setError("");
     setMessage("");
@@ -902,6 +1049,7 @@ function AgentProfilePage({ authUser, onUpdateSuccess }) {
       if (res.success) {
         setMessage("Profile updated successfully!");
         setIsEditing(false);
+        setFieldErrors({});
         if (onUpdateSuccess) onUpdateSuccess(res.user);
       }
     } catch (err) {
@@ -983,35 +1131,47 @@ function AgentProfilePage({ authUser, onUpdateSuccess }) {
               <div>
                 <label className="label">Full Name</label>
                 <input
-                  className="input"
+                  className={`input ${fieldErrors.full_name ? "input-error" : ""}`}
                   disabled={!isEditing}
                   value={profileData.full_name}
-                  onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
+                  onChange={(e) => {
+                    setProfileData({ ...profileData, full_name: e.target.value });
+                    if (fieldErrors.full_name) setFieldErrors(prev => ({ ...prev, full_name: null }));
+                  }}
                   placeholder="Full Name..."
                   maxLength={100}
                 />
+                {fieldErrors.full_name && <div className="field-error">{fieldErrors.full_name}</div>}
               </div>
               <div>
                 <label className="label">Email Address</label>
                 <input
-                  className="input"
+                  className={`input ${fieldErrors.email ? "input-error" : ""}`}
                   disabled={!isEditing}
                   value={profileData.email}
-                  onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                  onChange={(e) => {
+                    setProfileData({ ...profileData, email: e.target.value });
+                    if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: null }));
+                  }}
                   placeholder="Email..."
                   maxLength={100}
                 />
+                {fieldErrors.email && <div className="field-error">{fieldErrors.email}</div>}
               </div>
               <div>
                 <label className="label">Phone Number</label>
                 <input
-                  className="input"
+                  className={`input ${fieldErrors.phone ? "input-error" : ""}`}
                   disabled={!isEditing}
                   value={profileData.phone}
-                  onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                  onChange={(e) => {
+                    setProfileData({ ...profileData, phone: e.target.value.replace(/[^0-9]/g, "") });
+                    if (fieldErrors.phone) setFieldErrors(prev => ({ ...prev, phone: null }));
+                  }}
                   placeholder="Phone..."
                   maxLength={20}
                 />
+                {fieldErrors.phone && <div className="field-error">{fieldErrors.phone}</div>}
               </div>
               <div className="cx-admin-profile-item" style={{ border: "none", padding: 0 }}>
                 <span>Username: </span>
@@ -1021,12 +1181,27 @@ function AgentProfilePage({ authUser, onUpdateSuccess }) {
 
             <div className="flex gap-12 mt-16">
               {!isEditing ? (
-                <button type="button" className="btn" onClick={() => setIsEditing(true)}>
+                <button 
+                  type="button" 
+                  className="btn" 
+                  onClick={() => {
+                    setIsEditing(true);
+                    setMessage("");
+                    setError("");
+                    setFieldErrors({});
+                  }}
+                >
                   Edit Profile
                 </button>
               ) : (
-                <>
-                  <button type="button" className="btn" onClick={handleUpdateProfile} disabled={loading}>
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleUpdateProfile(e);
+                  }} 
+                  style={{ width: "100%", display: "contents" }}
+                >
+                  <button type="submit" className="btn" disabled={loading}>
                     {loading ? "Saving..." : "Save Changes"}
                   </button>
                   <button
@@ -1039,11 +1214,12 @@ function AgentProfilePage({ authUser, onUpdateSuccess }) {
                         email: authUser.email,
                         phone: authUser.phone,
                       });
+                      setFieldErrors({});
                     }}
                   >
                     Cancel
                   </button>
-                </>
+                </form>
               )}
             </div>
           </div>
@@ -1118,6 +1294,8 @@ export default function AgentDashboard({ onLogout }) {
   const [bills, setBills] = useState([]);
   const [branches, setBranches] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [editingShipment, setEditingShipment] = useState(null);
+  const [prefilledTracking, setPrefilledTracking] = useState("");
 
   const [dateRange, setDateRange] = useState({
     start: new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split('T')[0],
@@ -1167,6 +1345,7 @@ export default function AgentDashboard({ onLogout }) {
   }, [refreshKey, dateRange]);
 
   const handleShipmentCreated = () => {
+    setEditingShipment(null);
     setRefreshKey((prev) => prev + 1);
     setActiveTab("bookings");
   };
@@ -1205,6 +1384,14 @@ export default function AgentDashboard({ onLogout }) {
           <BookingsView
             shipments={shipments}
             onPageChange={(page) => loadShipments(page)}
+            onEditShipment={(shipment) => {
+              setEditingShipment(shipment);
+              setActiveTab("create-shipment");
+            }}
+            onUpdateStatus={(tracking) => {
+              setPrefilledTracking(tracking);
+              setActiveTab("status");
+            }}
           />
         )}
 
@@ -1212,10 +1399,25 @@ export default function AgentDashboard({ onLogout }) {
           <CreateShipmentView
             onShipmentCreated={handleShipmentCreated}
             authUser={authUser}
+            editingShipment={editingShipment}
+            onCancelEdit={() => {
+              setEditingShipment(null);
+              setActiveTab("bookings");
+            }}
           />
         )}
 
-        {activeTab === "status" && <StatusView authUser={authUser} onStatusUpdated={() => { loadShipments(); loadDashboardStats(); }} />}
+        {activeTab === "status" && (
+          <StatusView
+            authUser={authUser}
+            prefilledTracking={prefilledTracking}
+            onStatusUpdated={() => {
+              loadShipments();
+              loadDashboardStats();
+              setPrefilledTracking("");
+            }}
+          />
+        )}
 
         {activeTab === "bills" && <BillsView bills={bills} />}
       </main>

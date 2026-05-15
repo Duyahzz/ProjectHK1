@@ -211,14 +211,15 @@ select {
 }
 
 .input-error {
-  border-color: #dc2626 !important;
-  box-shadow: 0 0 0 1px #dc2626 inset;
+  border-color: #e11d48 !important;
+  box-shadow: 0 0 0 1px #e11d48 inset !important;
+  background-color: #fff1f2 !important;
 }
 
 .field-error {
-  margin-top: 6px;
+  margin-top: 4px;
   font-size: 13px;
-  color: #dc2626;
+  color: #e11d48;
   font-weight: 600;
 }
 

@@ -381,7 +381,7 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                       className={`input ${getFieldError("phone") ? "input-error" : ""}`}
                       value={registerForm.phone}
                       onChange={(e) => {
-                        setRegisterForm((prev) => ({ ...prev, phone: e.target.value }));
+                        setRegisterForm((prev) => ({ ...prev, phone: e.target.value.replace(/[^0-9]/g, "") }));
                         setFieldErrors((prev) => ({ ...prev, phone: "" }));
                       }}
                       placeholder="Phone number..."
@@ -532,7 +532,7 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                       className={`input ${getFieldError("phone") ? "input-error" : ""}`}
                       value={forgotForm.phone}
                       onChange={(e) => {
-                        setForgotForm((prev) => ({ ...prev, phone: e.target.value }));
+                        setForgotForm((prev) => ({ ...prev, phone: e.target.value.replace(/[^0-9]/g, "") }));
                         setFieldErrors((prev) => ({ ...prev, phone: "" }));
                       }}
                       placeholder="Phone number..."

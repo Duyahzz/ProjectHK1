@@ -61,6 +61,11 @@ export default function CreateShipmentPage({ onShipmentCreated }) {
   }, [formData.sender_phone]);
 
   const handleChange = (field, value) => {
+    // Only allow digits for phone number fields
+    if (field === "sender_phone" || field === "receiver_phone") {
+      value = value.replace(/[^0-9]/g, "");
+    }
+
     setFormData((prev) => {
       let updatedFormData = { ...prev, [field]: value };
 
@@ -126,7 +131,12 @@ export default function CreateShipmentPage({ onShipmentCreated }) {
       }
     } catch (error) {
       console.error(error);
-      setCreateError("Create shipment failed. Please check your data.");
+      if (error.validationErrors) {
+        const firstError = Object.values(error.validationErrors)[0];
+        setCreateError(Array.isArray(firstError) ? firstError[0] : firstError);
+      } else {
+        setCreateError(error.message || "Create shipment failed. Please check your data.");
+      }
     } finally {
       setSubmitting(false);
     }
