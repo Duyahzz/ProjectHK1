@@ -17,6 +17,7 @@ function AdminMenu({ activeTab, setActiveTab, onLogout }) {
     { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { key: "shipments", label: "Shipments", icon: Package },
     { key: "customers", label: "Customers", icon: Users },
+    { key: "agents", label: "Agents", icon: Users },
     { key: "branches", label: "Branches", icon: Building2 },
     { key: "types", label: "Shipment Types", icon: ClipboardList },
     { key: "bills", label: "Bills", icon: Receipt },
@@ -833,6 +834,262 @@ function CustomersView({ refreshKey, onDataChanged }) {
   );
 }
 
+function AgentsView({ refreshKey, onDataChanged }) {
+  const emptyForm = {
+    username: "",
+    password: "",
+    full_name: "",
+    email: "",
+    phone: "",
+    role: "AGENT",
+    branch_id: "",
+  };
+
+  const [query, setQuery] = useState("");
+  const [agents, setAgents] = useState([]);
+  const [branches, setBranches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editingAgent, setEditingAgent] = useState(null);
+  const [form, setForm] = useState(emptyForm);
+  const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [agentList, branchList] = await Promise.all([
+        api.getAgents(query),
+        api.getBranches()
+      ]);
+      setAgents(agentList);
+      setBranches(branchList);
+    } catch (error) {
+      console.error(error);
+      setMessage(error.message || "Cannot load agents.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadData();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [query, refreshKey]);
+
+  const getFieldError = (name) => {
+    const value = fieldErrors?.[name];
+    if (Array.isArray(value)) return value[0];
+    return value || "";
+  };
+
+  const clearFieldError = (name) => {
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setSaving(true);
+      setMessage("");
+      setFieldErrors({});
+
+      if (editingAgent) {
+        await api.updateUser(editingAgent.user_id, form);
+        setMessage("Agent updated successfully.");
+      } else {
+        await api.createUser(form);
+        setMessage("Agent created successfully.");
+      }
+
+      setForm(emptyForm);
+      setEditingAgent(null);
+      onDataChanged();
+    } catch (error) {
+      if (error.status === 422) {
+        setFieldErrors(error.validationErrors || {});
+        setMessage("Please check the highlighted fields.");
+      } else {
+        setMessage(error.message || "Cannot save agent.");
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEdit = (agent) => {
+    setEditingAgent(agent);
+    setForm({
+      username: agent.username || "",
+      password: "", // Keep password empty unless changing
+      full_name: agent.full_name || "",
+      email: agent.email || "",
+      phone: agent.phone || "",
+      role: agent.role || "AGENT",
+      branch_id: agent.branch_id || "",
+    });
+    setMessage("");
+    setFieldErrors({});
+  };
+
+  const handleDelete = async (agent) => {
+    if (!window.confirm(`Delete agent "${agent.full_name}"?`)) return;
+    try {
+      await api.deleteUser(agent.user_id);
+      setMessage("Agent deleted successfully.");
+      onDataChanged();
+    } catch (error) {
+      alert(error.message || "Cannot delete agent.");
+    }
+  };
+
+  return (
+    <>
+      <div className="cx-admin-panel">
+        <div className="cx-admin-toolbar">
+          <div className="cx-admin-search">
+            <Users size={16} />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search agents by name, email, or username..."
+            />
+          </div>
+        </div>
+
+        <div className="cx-admin-table-wrap">
+          <table className="cx-admin-table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Branch</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan="6" className="cx-empty-row">Loading agents...</td></tr>
+              ) : agents.length ? (
+                agents.map((item) => (
+                  <tr key={item.user_id}>
+                    <td><strong>{item.username}</strong></td>
+                    <td>{item.full_name}</td>
+                    <td>{item.email}</td>
+                    <td>{item.phone}</td>
+                    <td>{item.branch?.branch_name || "N/A"}</td>
+                    <td>
+                      <div className="flex gap-12">
+                        <button className="btn-outline" onClick={() => handleEdit(item)}>Edit</button>
+                        <button className="btn-outline" onClick={() => handleDelete(item)} style={{ color: "#dc2626", borderColor: "#fecaca" }}>Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr><td colSpan="6" className="cx-empty-row">No agents found.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="cx-admin-panel mt-24">
+        <div className="cx-admin-panel-header">
+          <h3>{editingAgent ? "Edit Agent" : "Add New Agent"}</h3>
+        </div>
+
+        <div className="grid-2">
+          {!editingAgent && (
+            <div style={{ position: "relative" }}>
+              <label className="label">Username</label>
+              <input
+                className={`input ${getFieldError("username") ? "input-error" : ""}`}
+                value={form.username}
+                onChange={(e) => { setForm({ ...form, username: e.target.value }); clearFieldError("username"); }}
+                placeholder="Unique username..."
+              />
+              {getFieldError("username") && <div className="field-error">{getFieldError("username")}</div>}
+            </div>
+          )}
+          
+          <div style={{ position: "relative" }}>
+            <label className="label">{editingAgent ? "New Password (Optional)" : "Password"}</label>
+            <input
+              type="password"
+              className={`input ${getFieldError("password") ? "input-error" : ""}`}
+              value={form.password}
+              onChange={(e) => { setForm({ ...form, password: e.target.value }); clearFieldError("password"); }}
+              placeholder="Minimum 6 characters..."
+            />
+            {getFieldError("password") && <div className="field-error">{getFieldError("password")}</div>}
+          </div>
+
+          <div style={{ position: "relative" }}>
+            <label className="label">Full Name</label>
+            <input
+              className={`input ${getFieldError("full_name") ? "input-error" : ""}`}
+              value={form.full_name}
+              onChange={(e) => { setForm({ ...form, full_name: e.target.value }); clearFieldError("full_name"); }}
+              placeholder="Full name..."
+            />
+            {getFieldError("full_name") && <div className="field-error">{getFieldError("full_name")}</div>}
+          </div>
+
+          <div style={{ position: "relative" }}>
+            <label className="label">Email Address</label>
+            <input
+              className={`input ${getFieldError("email") ? "input-error" : ""}`}
+              value={form.email}
+              onChange={(e) => { setForm({ ...form, email: e.target.value }); clearFieldError("email"); }}
+              placeholder="Email..."
+            />
+            {getFieldError("email") && <div className="field-error">{getFieldError("email")}</div>}
+          </div>
+
+          <div style={{ position: "relative" }}>
+            <label className="label">Phone Number</label>
+            <input
+              className={`input ${getFieldError("phone") ? "input-error" : ""}`}
+              value={form.phone}
+              onChange={(e) => { setForm({ ...form, phone: e.target.value.replace(/[^0-9]/g, "") }); clearFieldError("phone"); }}
+              placeholder="Phone..."
+            />
+            {getFieldError("phone") && <div className="field-error">{getFieldError("phone")}</div>}
+          </div>
+
+          <div style={{ position: "relative" }}>
+            <label className="label">Assign Branch</label>
+            <select
+              className={`select ${getFieldError("branch_id") ? "input-error" : ""}`}
+              value={form.branch_id}
+              onChange={(e) => { setForm({ ...form, branch_id: e.target.value }); clearFieldError("branch_id"); }}
+            >
+              <option value="">Select a branch</option>
+              {branches.map(b => <option key={b.branch_id} value={b.branch_id}>{b.branch_name} ({b.city})</option>)}
+            </select>
+            {getFieldError("branch_id") && <div className="field-error">{getFieldError("branch_id")}</div>}
+          </div>
+        </div>
+
+        {message && <div style={{ marginTop: 14, fontWeight: 600 }}>{message}</div>}
+
+        <div className="flex gap-12 mt-24">
+          <button className="btn" onClick={handleSubmit} disabled={saving}>
+            {saving ? "Saving..." : editingAgent ? "Update Agent" : "Add Agent"}
+          </button>
+          <button className="btn-outline" onClick={() => { setForm(emptyForm); setEditingAgent(null); setFieldErrors({}); setMessage(""); }}>
+            Reset
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function BranchesView({ refreshKey, onDataChanged }) {
   const emptyForm = {
     branch_code: "",
@@ -1363,6 +1620,13 @@ export default function AdminDashboard({ onLogout }) {
 
         {activeTab === "customers" && (
           <CustomersView
+            refreshKey={refreshKey}
+            onDataChanged={handleRefresh}
+          />
+        )}
+
+        {activeTab === "agents" && (
+          <AgentsView
             refreshKey={refreshKey}
             onDataChanged={handleRefresh}
           />

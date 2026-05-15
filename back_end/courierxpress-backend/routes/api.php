@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\ShipmentTypeController;
 use App\Http\Controllers\Api\ShipmentController;
 use App\Http\Controllers\Api\BillController;
+use App\Http\Controllers\Api\UserController;
 
 Route::get('/test-db', function () {
     return DB::table('branches')->get();
@@ -54,3 +55,8 @@ Route::get('/tracking/{tracking}', [ShipmentController::class, 'trackByNumber'])
 Route::get('/bills', [BillController::class, 'index']);
 Route::get('/bills/{bill}', [BillController::class, 'show']);
 Route::get('/bills/by-tracking/{tracking}', [BillController::class, 'byTracking']);
+
+Route::get('/users', [UserController::class, 'index']);
+Route::post('/users', [UserController::class, 'store']);
+Route::post('/users/{id}', [UserController::class, 'update']);
+Route::delete('/users/{id}', [UserController::class, 'destroy']);

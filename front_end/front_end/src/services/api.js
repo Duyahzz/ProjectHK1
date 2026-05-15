@@ -143,6 +143,22 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  getAgents: (search = "") =>
+    request(`/users?role=AGENT${search ? `&search=${encodeURIComponent(search)}` : ""}`),
+  createUser: (payload) =>
+    request("/users", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updateUser: (id, payload) =>
+    request(`/users/${id}`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  deleteUser: (id) =>
+    request(`/users/${id}`, {
+      method: "DELETE",
+    }),
 };
 
 export default API_URL;
