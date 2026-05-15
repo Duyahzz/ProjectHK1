@@ -34,8 +34,8 @@ class CustomerController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'full_name' => 'required|string|max:100',
-            'email' => 'required|email|max:100',
-            'phone' => 'required|string|max:20|unique:customers,phone',
+            'email' => 'required|email|max:100|ends_with:@gmail.com',
+            'phone' => 'required|numeric|digits_between:8,20|unique:customers,phone',
             'address_line' => 'required|string|max:250',
             'city' => 'required|string|max:100',
             'country' => 'required|string|max:100',
@@ -43,6 +43,7 @@ class CustomerController extends Controller
             'full_name.required' => 'Customer name is required.',
             'email.required' => 'Email is required.',
             'email.email' => 'Email format is invalid.',
+            'email.ends_with' => 'Email must be a @gmail.com address.',
             'phone.required' => 'Phone number is required.',
             'phone.unique' => 'This phone number already exists.',
             'address_line.required' => 'Address is required.',
@@ -86,12 +87,12 @@ class CustomerController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'full_name' => 'required|string|max:100',
-            'email' => 'required|email|max:100',
+            'email' => 'required|email|max:100|ends_with:@gmail.com',
             'phone' => [
-                'required',
-                'string',
-                'max:20',
-                Rule::unique('customers', 'phone')->ignore($customer->customer_id, 'customer_id'),
+            'required',
+            'numeric', 
+            'digits_between:8,20', // Vừa kiểm tra là số, vừa kiểm tra độ dài
+            Rule::unique('customers', 'phone')->ignore($customer->customer_id, 'customer_id'),
             ],
             'address_line' => 'required|string|max:250',
             'city' => 'required|string|max:100',
@@ -100,6 +101,7 @@ class CustomerController extends Controller
             'full_name.required' => 'Customer name is required.',
             'email.required' => 'Email is required.',
             'email.email' => 'Email format is invalid.',
+            'email.ends_with' => 'Email must be a @gmail.com address.',
             'phone.required' => 'Phone number is required.',
             'phone.unique' => 'This phone number already exists.',
             'address_line.required' => 'Address is required.',

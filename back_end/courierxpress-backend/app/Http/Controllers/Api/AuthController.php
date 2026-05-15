@@ -17,8 +17,8 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'full_name' => 'required|string|min:3|max:100',
             'username' => 'required|string|min:3|max:50|unique:users,username',
-            'email' => 'required|email|max:100|unique:users,email',
-            'phone' => 'required|string|min:8|max:20|unique:users,phone',
+            'email' => 'required|email|max:100|ends_with:@gmail.com|unique:users,email',
+            'phone' => 'required|numeric|digits_between:8,20|unique:users,phone',
             'password' => 'required|string|min:6|confirmed',
             'address_line' => 'required|string|min:3|max:255',
             'city' => 'required|string|min:2|max:100',
@@ -29,6 +29,7 @@ class AuthController extends Controller
             'username.unique' => 'This username already exists.',
             'email.required' => 'Email is required.',
             'email.email' => 'Email format is invalid.',
+            'email.ends_with' => 'Email must be a @gmail.com address.',
             'email.unique' => 'This email already exists.',
             'phone.required' => 'Phone number is required.',
             'phone.unique' => 'This phone number already exists.',
@@ -225,7 +226,7 @@ class AuthController extends Controller
 
         $validator = Validator::make($request->all(), [
             'full_name' => 'required|string|max:100',
-            'email' => 'required|email|max:100|unique:users,email,' . $user->user_id . ',user_id',
+            'email' => 'required|email|max:100|ends_with:@gmail.com|unique:users,email,' . $user->user_id . ',user_id',
             'phone' => 'required|string|max:20|unique:users,phone,' . $user->user_id . ',user_id',
             'address_line' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:100',

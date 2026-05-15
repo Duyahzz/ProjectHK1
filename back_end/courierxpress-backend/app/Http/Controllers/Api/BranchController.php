@@ -23,7 +23,7 @@ class BranchController extends Controller
             'branch_name' => 'required|string|max:100',
             'city' => 'required|string|max:100',
             'phone' => 'nullable|string|max:20|unique:branches,phone',
-            'email' => 'nullable|email|max:100|unique:branches,email',
+            'email' => 'nullable|email|max:100|ends_with:@gmail.com|unique:branches,email',
             'status' => 'required|string|in:ACTIVE,INACTIVE',
         ], [
             'branch_code.required' => 'Branch code is required.',
@@ -32,6 +32,7 @@ class BranchController extends Controller
             'city.required' => 'City is required.',
             'phone.unique' => 'This phone number already exists.',
             'email.unique' => 'This email already exists.',
+            'email.ends_with' => 'Email must be a @gmail.com address.',
             'status.required' => 'Status is required.',
             'status.in' => 'Status must be ACTIVE or INACTIVE.',
         ]);

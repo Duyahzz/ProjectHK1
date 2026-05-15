@@ -150,12 +150,10 @@ export default function CreateShipmentPage({ onShipmentCreated }) {
               <div style={{ position: "relative" }}>
                 <label className="label">Sender Name</label>
                 <input className="input" type="text" value={formData.sender_name} onChange={(e) => handleChange("sender_name", e.target.value)} required placeholder="Full Name..." maxLength={100} />
-                <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.sender_name.length >= 100 ? "red" : "#999" }}>{formData.sender_name.length}/100</span>
               </div>
               <div style={{ position: "relative" }}>
                 <label className="label">Sender Phone</label>
                 <input className="input" type="text" value={formData.sender_phone} onChange={(e) => handleChange("sender_phone", e.target.value)} required placeholder="Enter phone..." maxLength={20} />
-                <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.sender_phone.length >= 20 ? "red" : "#999" }}>{formData.sender_phone.length}/20</span>
                 <small style={{ color: "#666", fontSize: "11px" }}>Tip: Existing customers will be auto-filled.</small>
               </div>
             </div>
@@ -163,12 +161,10 @@ export default function CreateShipmentPage({ onShipmentCreated }) {
               <div style={{ position: "relative" }}>
                 <label className="label">Sender Address</label>
                 <input className="input" type="text" value={formData.sender_address} onChange={(e) => handleChange("sender_address", e.target.value)} required placeholder="Address..." maxLength={250} />
-                <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.sender_address.length >= 250 ? "red" : "#999" }}>{formData.sender_address.length}/250</span>
               </div>
               <div style={{ position: "relative" }}>
                 <label className="label">Sender City</label>
                 <input className="input" type="text" value={formData.sender_city} onChange={(e) => handleChange("sender_city", e.target.value)} placeholder="City..." maxLength={100} />
-                <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.sender_city.length >= 100 ? "red" : "#999" }}>{formData.sender_city.length}/100</span>
               </div>
             </div>
 
@@ -178,24 +174,20 @@ export default function CreateShipmentPage({ onShipmentCreated }) {
               <div style={{ position: "relative" }}>
                 <label className="label">Receiver Name</label>
                 <input className="input" type="text" value={formData.receiver_name} onChange={(e) => handleChange("receiver_name", e.target.value)} required placeholder="Full Name..." maxLength={100} />
-                <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.receiver_name.length >= 100 ? "red" : "#999" }}>{formData.receiver_name.length}/100</span>
               </div>
               <div style={{ position: "relative" }}>
                 <label className="label">Receiver Phone</label>
                 <input className="input" type="text" value={formData.receiver_phone} onChange={(e) => handleChange("receiver_phone", e.target.value)} required placeholder="Phone Number..." maxLength={20} />
-                <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.receiver_phone.length >= 20 ? "red" : "#999" }}>{formData.receiver_phone.length}/20</span>
               </div>
             </div>
             <div className="grid-2">
               <div style={{ position: "relative" }}>
                 <label className="label">Receiver Address</label>
                 <input className="input" type="text" value={formData.receiver_address} onChange={(e) => handleChange("receiver_address", e.target.value)} required placeholder="Address..." maxLength={250} />
-                <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.receiver_address.length >= 250 ? "red" : "#999" }}>{formData.receiver_address.length}/250</span>
               </div>
               <div style={{ position: "relative" }}>
                 <label className="label">Receiver City</label>
                 <input className="input" type="text" value={formData.receiver_city} onChange={(e) => handleChange("receiver_city", e.target.value)} placeholder="City..." maxLength={100} />
-                <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.receiver_city.length >= 100 ? "red" : "#999" }}>{formData.receiver_city.length}/100</span>
               </div>
             </div>
 
@@ -226,7 +218,6 @@ export default function CreateShipmentPage({ onShipmentCreated }) {
               <div style={{ position: "relative" }}>
                 <label className="label">Parcel Name</label>
                 <input className="input" type="text" value={formData.parcel_name} onChange={(e) => handleChange("parcel_name", e.target.value)} placeholder="e.g. Clothes" maxLength={100} />
-                <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: formData.parcel_name.length >= 100 ? "red" : "#999" }}>{formData.parcel_name.length}/100</span>
               </div>
               <div>
                 <label className="label">Weight (kg)</label>

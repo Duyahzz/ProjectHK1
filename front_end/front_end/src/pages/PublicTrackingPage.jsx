@@ -38,16 +38,7 @@ export default function PublicTrackingPage() {
                 placeholder="Tracking number..." 
                 maxLength={20} 
               />
-              <span style={{ 
-                position: "absolute", 
-                right: "12px", 
-                top: "50%", 
-                transform: "translateY(-50%)", 
-                fontSize: "12px", 
-                color: tracking.length >= 20 ? "red" : "#999" 
-              }}>
-                {tracking.length}/20
-              </span>
+
             </div>
             <button className="btn" onClick={handleTrack}>{loading ? "Tracking..." : "Track"}</button>
           </div>

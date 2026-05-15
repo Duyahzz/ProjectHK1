@@ -120,7 +120,7 @@ function StatusPill({ value }) {
   return <span className={`cx-status-pill ${className}`}>{status || "-"}</span>;
 }
 
-function DashboardView({ shipments, bills, setActiveTab }) {
+function DashboardView({ shipments, bills, setActiveTab, dateRange, setDateRange }) {
   const shipmentList = Array.isArray(shipments) ? shipments : (shipments?.data || []);
   const billList = Array.isArray(bills) ? bills : (bills?.data || []);
 
@@ -144,6 +144,33 @@ function DashboardView({ shipments, bills, setActiveTab }) {
 
   return (
     <>
+      <div className="cx-admin-panel" style={{ marginBottom: "20px", padding: "15px" }}>
+        <div className="flex gap-12" style={{ alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ fontWeight: "600", color: "#4b5563" }}>📊 Filter by Booking Date:</div>
+          <div className="flex gap-12">
+            <div className="flex gap-12" style={{ alignItems: "center" }}>
+              <span className="text-muted">From:</span>
+              <input
+                type="date"
+                className="input"
+                style={{ width: "auto", padding: "5px 10px" }}
+                value={dateRange.start}
+                onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+              />
+            </div>
+            <div className="flex gap-12" style={{ alignItems: "center" }}>
+              <span className="text-muted">To:</span>
+              <input
+                type="date"
+                className="input"
+                style={{ width: "auto", padding: "5px 10px" }}
+                value={dateRange.end}
+                onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="cx-admin-stat-grid">
         <DashboardStat title="Total Shipments" value={shipmentList.length} />
         <DashboardStat title="Booked" value={bookedCount} tone="pending" />
@@ -236,6 +263,8 @@ function ShipmentsView({ refreshKey, authUser, onDataChanged }) {
   const [keyword, setKeyword] = useState("");
   const [shipments, setShipments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const [selectedShipment, setSelectedShipment] = useState(null);
   const [statusForm, setStatusForm] = useState({
@@ -248,11 +277,15 @@ function ShipmentsView({ refreshKey, authUser, onDataChanged }) {
   useEffect(() => {
     setLoading(true);
     api
-      .getShipments({ status: shipmentFilter === "ALL" ? "" : shipmentFilter })
+      .getShipments({ 
+        status: shipmentFilter === "ALL" ? "" : shipmentFilter,
+        start_date: startDate,
+        end_date: endDate
+      })
       .then(setShipments)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [shipmentFilter, refreshKey]);
+  }, [shipmentFilter, startDate, endDate, refreshKey]);
 
   const filteredShipments = useMemo(() => {
     const list = Array.isArray(shipments) ? shipments : (shipments?.data || []);
@@ -310,6 +343,16 @@ function ShipmentsView({ refreshKey, authUser, onDataChanged }) {
               onChange={(e) => setKeyword(e.target.value)}
               placeholder="Search by tracking number, sender, or receiver..."
             />
+          </div>
+
+          <div className="flex" style={{ gap: "8px", alignItems: "center" }}>
+            <span style={{ fontSize: "14px", fontWeight: 500, display: "flex", alignItems: "center", gap: "6px" }}>
+              <Package size={16} style={{color: "#3b82f6"}} /> Filter by Booking Date:
+            </span>
+            <span style={{ fontSize: "12px", color: "#666" }}>From:</span>
+            <input type="date" className="input" style={{ padding: "4px 8px", minHeight: "32px", fontSize: "13px" }} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <span style={{ fontSize: "12px", color: "#666" }}>To:</span>
+            <input type="date" className="input" style={{ padding: "4px 8px", minHeight: "32px", fontSize: "13px" }} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
           </div>
 
           <select
@@ -426,7 +469,6 @@ function ShipmentsView({ refreshKey, authUser, onDataChanged }) {
                 placeholder="Enter status note..."
                 maxLength={250}
               />
-              <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: statusForm.status_note.length >= 250 ? "red" : "#999" }}>{statusForm.status_note.length}/250</span>
             </div>
           </div>
 
@@ -670,7 +712,6 @@ function CustomersView({ refreshKey, onDataChanged }) {
               placeholder="Full name..."
               maxLength={100}
             />
-            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.full_name.length >= 100 ? "red" : "#999" }}>{form.full_name.length}/100</span>
             {getFieldError("full_name") ? (
               <div className="field-error">{getFieldError("full_name")}</div>
             ) : null}
@@ -688,7 +729,6 @@ function CustomersView({ refreshKey, onDataChanged }) {
               placeholder="Email..."
               maxLength={100}
             />
-            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.email.length >= 100 ? "red" : "#999" }}>{form.email.length}/100</span>
             {getFieldError("email") ? (
               <div className="field-error">{getFieldError("email")}</div>
             ) : null}
@@ -706,7 +746,6 @@ function CustomersView({ refreshKey, onDataChanged }) {
               placeholder="Phone..."
               maxLength={20}
             />
-            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.phone.length >= 20 ? "red" : "#999" }}>{form.phone.length}/20</span>
             {getFieldError("phone") ? (
               <div className="field-error">{getFieldError("phone")}</div>
             ) : null}
@@ -724,7 +763,6 @@ function CustomersView({ refreshKey, onDataChanged }) {
               placeholder="Address..."
               maxLength={250}
             />
-            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.address_line.length >= 250 ? "red" : "#999" }}>{form.address_line.length}/250</span>
             {getFieldError("address_line") ? (
               <div className="field-error">{getFieldError("address_line")}</div>
             ) : null}
@@ -742,7 +780,6 @@ function CustomersView({ refreshKey, onDataChanged }) {
               placeholder="City..."
               maxLength={100}
             />
-            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.city.length >= 100 ? "red" : "#999" }}>{form.city.length}/100</span>
             {getFieldError("city") ? (
               <div className="field-error">{getFieldError("city")}</div>
             ) : null}
@@ -760,7 +797,6 @@ function CustomersView({ refreshKey, onDataChanged }) {
               placeholder="Country..."
               maxLength={100}
             />
-            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.country.length >= 100 ? "red" : "#999" }}>{form.country.length}/100</span>
             {getFieldError("country") ? (
               <div className="field-error">{getFieldError("country")}</div>
             ) : null}
@@ -939,7 +975,6 @@ function BranchesView({ refreshKey, onDataChanged }) {
               placeholder="Branch code..."
               maxLength={20}
             />
-            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.branch_code.length >= 20 ? "red" : "#999" }}>{form.branch_code.length}/20</span>
             {getFieldError("branch_code") ? (
               <div className="field-error">{getFieldError("branch_code")}</div>
             ) : null}
@@ -957,7 +992,6 @@ function BranchesView({ refreshKey, onDataChanged }) {
               placeholder="Branch name..."
               maxLength={100}
             />
-            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.branch_name.length >= 100 ? "red" : "#999" }}>{form.branch_name.length}/100</span>
             {getFieldError("branch_name") ? (
               <div className="field-error">{getFieldError("branch_name")}</div>
             ) : null}
@@ -975,7 +1009,6 @@ function BranchesView({ refreshKey, onDataChanged }) {
               placeholder="City..."
               maxLength={100}
             />
-            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.city.length >= 100 ? "red" : "#999" }}>{form.city.length}/100</span>
             {getFieldError("city") ? (
               <div className="field-error">{getFieldError("city")}</div>
             ) : null}
@@ -993,7 +1026,6 @@ function BranchesView({ refreshKey, onDataChanged }) {
               placeholder="Phone..."
               maxLength={20}
             />
-            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.phone.length >= 20 ? "red" : "#999" }}>{form.phone.length}/20</span>
             {getFieldError("phone") ? (
               <div className="field-error">{getFieldError("phone")}</div>
             ) : null}
@@ -1011,7 +1043,6 @@ function BranchesView({ refreshKey, onDataChanged }) {
               placeholder="Email..."
               maxLength={100}
             />
-            <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: form.email.length >= 100 ? "red" : "#999" }}>{form.email.length}/100</span>
             {getFieldError("email") ? (
               <div className="field-error">{getFieldError("email")}</div>
             ) : null}
@@ -1272,15 +1303,20 @@ export default function AdminDashboard({ onLogout }) {
   const [bills, setBills] = useState([]);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [dateRange, setDateRange] = useState({ start: "", end: "" });
 
   const loadDashboardData = () => {
-    api.getShipments().then(setShipments).catch(console.error);
-    api.getBills().then(setBills).catch(console.error);
+    const params = {};
+    if (dateRange.start) params.start_date = dateRange.start;
+    if (dateRange.end) params.end_date = dateRange.end;
+
+    api.getShipments(params).then(setShipments).catch(console.error);
+    api.getBills(params).then(setBills).catch(console.error);
   };
 
   useEffect(() => {
     loadDashboardData();
-  }, [refreshKey]);
+  }, [refreshKey, dateRange.start, dateRange.end]);
 
   const handleRefresh = () => {
     setRefreshKey((prev) => prev + 1);
@@ -1305,6 +1341,8 @@ export default function AdminDashboard({ onLogout }) {
             shipments={shipments}
             bills={bills}
             setActiveTab={setActiveTab}
+            dateRange={dateRange}
+            setDateRange={setDateRange}
           />
         )}
 

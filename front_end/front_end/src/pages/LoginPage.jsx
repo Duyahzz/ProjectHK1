@@ -272,7 +272,6 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                       placeholder="Username or Email..."
                       maxLength={100}
                     />
-                    <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: loginForm.login.length >= 100 ? "red" : "#999" }}>{loginForm.login.length}/100</span>
                     {getFieldError("login") ? (
                       <div className="field-error">{getFieldError("login")}</div>
                     ) : null}
@@ -337,7 +336,6 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                       placeholder="Full name..."
                       maxLength={100}
                     />
-                    <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: registerForm.full_name.length >= 100 ? "red" : "#999" }}>{registerForm.full_name.length}/100</span>
                     {getFieldError("full_name") ? (
                       <div className="field-error">{getFieldError("full_name")}</div>
                     ) : null}
@@ -355,7 +353,6 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                       placeholder="Username..."
                       maxLength={100}
                     />
-                    <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: registerForm.username.length >= 100 ? "red" : "#999" }}>{registerForm.username.length}/100</span>
                     {getFieldError("username") ? (
                       <div className="field-error">{getFieldError("username")}</div>
                     ) : null}
@@ -373,7 +370,6 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                       placeholder="Email..."
                       maxLength={100}
                     />
-                    <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: registerForm.email.length >= 100 ? "red" : "#999" }}>{registerForm.email.length}/100</span>
                     {getFieldError("email") ? (
                       <div className="field-error">{getFieldError("email")}</div>
                     ) : null}
@@ -391,7 +387,6 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                       placeholder="Phone number..."
                       maxLength={20}
                     />
-                    <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: registerForm.phone.length >= 20 ? "red" : "#999" }}>{registerForm.phone.length}/20</span>
                     {getFieldError("phone") ? (
                       <div className="field-error">{getFieldError("phone")}</div>
                     ) : null}
@@ -410,7 +405,6 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                         placeholder="Address..."
                         maxLength={250}
                       />
-                      <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: registerForm.address_line.length >= 250 ? "red" : "#999" }}>{registerForm.address_line.length}/250</span>
                       {getFieldError("address_line") ? (
                         <div className="field-error">{getFieldError("address_line")}</div>
                       ) : null}
@@ -429,7 +423,6 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                       placeholder="City..."
                       maxLength={100}
                     />
-                    <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: registerForm.city.length >= 100 ? "red" : "#999" }}>{registerForm.city.length}/100</span>
                     {getFieldError("city") ? (
                       <div className="field-error">{getFieldError("city")}</div>
                     ) : null}
@@ -447,7 +440,6 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                       placeholder="Country..."
                       maxLength={100}
                     />
-                    <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: registerForm.country.length >= 100 ? "red" : "#999" }}>{registerForm.country.length}/100</span>
                     {getFieldError("country") ? (
                       <div className="field-error">{getFieldError("country")}</div>
                     ) : null}
@@ -529,7 +521,6 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                       placeholder="Username..."
                       maxLength={100}
                     />
-                    <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: forgotForm.username.length >= 100 ? "red" : "#999" }}>{forgotForm.username.length}/100</span>
                     {getFieldError("username") ? (
                       <div className="field-error">{getFieldError("username")}</div>
                     ) : null}
@@ -547,7 +538,6 @@ export default function LoginPage({ onLogin, onOpenPublicTracking }) {
                       placeholder="Phone number..."
                       maxLength={20}
                     />
-                    <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: forgotForm.phone.length >= 20 ? "red" : "#999" }}>{forgotForm.phone.length}/20</span>
                     {getFieldError("phone") ? (
                       <div className="field-error">{getFieldError("phone")}</div>
                     ) : null}

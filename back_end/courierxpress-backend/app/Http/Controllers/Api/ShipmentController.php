@@ -39,6 +39,17 @@ class ShipmentController extends Controller
             });
         }
 
+        if ($request->filled('customer_user_id')) {
+            $userId = $request->customer_user_id;
+            $query->where(function($q) use ($userId) {
+                $q->whereHas('sender', function($sub) use ($userId) {
+                    $sub->where('user_id', $userId);
+                })->orWhereHas('receiver', function($sub) use ($userId) {
+                    $sub->where('user_id', $userId);
+                });
+            });
+        }
+
         return response()->json(
             $query->orderBy('shipment_id', 'desc')->paginate(10)
         );
@@ -55,13 +66,13 @@ class ShipmentController extends Controller
         $request->validate([
             // Thông tin người gửi
             'sender_name' => 'required|string|max:100',
-            'sender_phone' => 'required|string|max:20',
+            'sender_phone' =>'required|numeric|digits_between:8,20',
             'sender_address' => 'required|string|max:250',
             'sender_city' => 'nullable|string|max:100',
             
             // Thông tin người nhận
             'receiver_name' => 'required|string|max:100',
-            'receiver_phone' => 'required|string|max:20',
+            'receiver_phone' => 'required|numeric|digits_between:8,20',
             'receiver_address' => 'required|string|max:250',
             'receiver_city' => 'nullable|string|max:100',
 

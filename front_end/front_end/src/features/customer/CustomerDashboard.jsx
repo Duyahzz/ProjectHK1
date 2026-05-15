@@ -294,9 +294,20 @@ function TrackView({
   );
 }
 
-function HistoryView({ shipments }) {
+function HistoryView({ shipments, startDate, setStartDate, endDate, setEndDate }) {
   return (
     <div className="cx-admin-panel">
+      <div className="cx-admin-toolbar" style={{ marginBottom: "16px" }}>
+        <div className="flex" style={{ gap: "8px", alignItems: "center" }}>
+          <span style={{ fontSize: "14px", fontWeight: 500, display: "flex", alignItems: "center", gap: "6px" }}>
+            <History size={16} style={{color: "#3b82f6"}} /> Filter by Booking Date:
+          </span>
+          <span style={{ fontSize: "12px", color: "#666" }}>From:</span>
+          <input type="date" className="input" style={{ padding: "4px 8px", minHeight: "32px", fontSize: "13px", width: "auto" }} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+          <span style={{ fontSize: "12px", color: "#666" }}>To:</span>
+          <input type="date" className="input" style={{ padding: "4px 8px", minHeight: "32px", fontSize: "13px", width: "auto" }} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+        </div>
+      </div>
       <div className="cx-admin-table-wrap">
         <table className="cx-admin-table">
           <thead>
@@ -457,7 +468,6 @@ function CustomerProfilePage({ authUser, customerProfile, onUpdateSuccess }) {
                     placeholder="Full Name..."
                     maxLength={100}
                   />
-                  <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: profileData.full_name.length >= 100 ? "red" : "#999" }}>{profileData.full_name.length}/100</span>
                 </div>
                 <div>
                   <label className="label">Username</label>
@@ -476,7 +486,6 @@ function CustomerProfilePage({ authUser, customerProfile, onUpdateSuccess }) {
                     placeholder="Email..."
                     maxLength={100}
                   />
-                  <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: profileData.email.length >= 100 ? "red" : "#999" }}>{profileData.email.length}/100</span>
                 </div>
                 <div style={{ position: "relative" }}>
                   <label className="label">Phone</label>
@@ -488,7 +497,6 @@ function CustomerProfilePage({ authUser, customerProfile, onUpdateSuccess }) {
                     placeholder="Phone..."
                     maxLength={20}
                   />
-                  <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: profileData.phone.length >= 20 ? "red" : "#999" }}>{profileData.phone.length}/20</span>
                 </div>
               </div>
 
@@ -502,7 +510,6 @@ function CustomerProfilePage({ authUser, customerProfile, onUpdateSuccess }) {
                   placeholder="Address..."
                   maxLength={250}
                 />
-                <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: profileData.address_line.length >= 250 ? "red" : "#999" }}>{profileData.address_line.length}/250</span>
               </div>
 
               <div className="grid-2">
@@ -516,7 +523,6 @@ function CustomerProfilePage({ authUser, customerProfile, onUpdateSuccess }) {
                     placeholder="City..."
                     maxLength={100}
                   />
-                  <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: profileData.city.length >= 100 ? "red" : "#999" }}>{profileData.city.length}/100</span>
                 </div>
                 <div style={{ position: "relative" }}>
                   <label className="label">Country</label>
@@ -528,7 +534,6 @@ function CustomerProfilePage({ authUser, customerProfile, onUpdateSuccess }) {
                     placeholder="Country..."
                     maxLength={100}
                   />
-                  <span style={{ position: "absolute", right: "12px", top: "38px", fontSize: "10px", color: profileData.country.length >= 100 ? "red" : "#999" }}>{profileData.country.length}/100</span>
                 </div>
               </div>
             </div>
@@ -623,21 +628,24 @@ export default function CustomerDashboard({ onLogout }) {
   const [trackingDetails, setTrackingDetails] = useState(null);
   const [historyShipments, setHistoryShipments] = useState([]);
   const [customerProfile, setCustomerProfile] = useState(null);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
-    api
-      .getShipments()
-      .then((items) => {
-        const filtered = items.filter((item) => {
-          const senderUserId = item.sender?.user_id;
-          const receiverUserId = item.receiver?.user_id;
-          return senderUserId === authUser?.user_id || receiverUserId === authUser?.user_id;
-        });
+    if (!authUser?.user_id) return;
 
-        setHistoryShipments(filtered);
+    api
+      .getShipments({ 
+        customer_user_id: authUser.user_id,
+        start_date: startDate,
+        end_date: endDate
+      })
+      .then((res) => {
+        const items = Array.isArray(res) ? res : (res?.data || []);
+        setHistoryShipments(items);
       })
       .catch(console.error);
-  }, [authUser?.user_id]);
+  }, [authUser?.user_id, startDate, endDate]);
 
   useEffect(() => {
     api
@@ -669,7 +677,15 @@ export default function CustomerDashboard({ onLogout }) {
           />
         )}
 
-        {activeTab === "history" && <HistoryView shipments={historyShipments} />}
+        {activeTab === "history" && (
+          <HistoryView 
+            shipments={historyShipments} 
+            startDate={startDate}
+            setStartDate={setStartDate}
+            endDate={endDate}
+            setEndDate={setEndDate}
+          />
+        )}
 
         {activeTab === "profile" && (
           <CustomerProfilePage
